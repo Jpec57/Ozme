@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:rsb="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory
+        android:title="Réglages distance"
+        android:key="pref_distance">
+        <SwitchPreference
+            android:title="Mode soirée"
+            android:text="@string/todo"
+            android:defaultValue="true"
+            android:persistent="true"
+            android:key="pref_mode_soiree"/>
+        <SwitchPreference
+            android:title="Mode entreprise"
+            android:defaultValue="false"
+            android:persistent="true"
+            android:key="pref_mode_entreprise"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/rencontrer"
+        android:key="pref_recontrer">
+
+        <SwitchPreference
+            android:title="Femmes"
+            android:key="pref_rencontrer_sexe_femmes"
+            android:defaultValue="true"
+            android:persistent="true"/>
+        <SwitchPreference
+            android:title="Hommes"
+            android:key="pref_rencontrer_sexe_hommes"
+            android:defaultValue="false"
+            android:persistent="true"/>
+
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Notifications"
+        android:key="pref_notif">
+        <SwitchPreference
+            android:title="Flash"
+            android:defaultValue="true"
+            android:persistent="true"
+            android:key="pref_notif_flash"/>
+        <SwitchPreference
+            android:title="Match"
+            android:defaultValue="true"
+            android:persistent="true"
+            android:key="pref_notif_match"/>
+        <SwitchPreference
+            android:title="Messages"
+            android:defaultValue="true"
+            android:persistent="true"
+            android:key="pref_notif_messages"/>
+    </PreferenceCategory>
+</PreferenceScreen>
