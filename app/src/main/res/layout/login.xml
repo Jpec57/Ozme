@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="5"
+    tools:context="com.ozme.LoginActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="4"
+        android:paddingBottom="15sp"
+        android:background="@color/colorPrimaryDark">
+        <ImageView
+            android:layout_width="70sp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="50sp"
+            android:id="@+id/logo"
+            android:contentDescription="@string/logo"
+            android:src="@drawable/logo_bright_white"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:text="Bienvenue"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_above="@id/subscribe"
+            android:id="@+id/bienvenue"
+            android:layout_marginBottom="10sp"
+            android:layout_centerHorizontal="true"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:layout_above="@+id/subscribe2"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/subscribe"
+            android:text="Inscrivez vous pour faire des rencontres inattendues."/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:layout_centerHorizontal="true"
+            android:layout_above="@id/ellipse"
+            android:id="@+id/subscribe2"
+            android:text="Osez vous laisser surprendre..."/>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10sp"
+            android:id="@+id/ellipse"
+            android:orientation="horizontal"
+            android:layout_alignParentBottom="true">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ellipse_1"
+                android:contentDescription="@string/todo" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10sp"
+                android:layout_marginRight="5sp"
+                android:contentDescription="@string/todo"
+                android:src="@drawable/ellipse_2"
+                android:layout_marginEnd="5sp"
+                android:layout_marginStart="10sp" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5sp"
+                android:layout_marginRight="5sp"
+                android:contentDescription="@string/todo"
+                android:src="@drawable/ellipse_2"/>
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/todo"
+                android:layout_marginLeft="5sp"
+                android:layout_marginRight="10sp"
+                android:src="@drawable/ellipse_2"
+                android:layout_marginEnd="10sp"
+                android:layout_marginStart="5sp" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:contentDescription="@string/todo"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ellipse_2"/>
+        </LinearLayout>
+
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:background="@drawable/pink_filter"
+        android:layout_height="0dp"
+        android:padding="15sp"
+        android:orientation="vertical"
+        android:layout_weight="1"
+        android:textAlignment="center">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:layout_gravity="center_horizontal"
+            android:text="Nous ne publierons jamais rien sur Facebook"/>
+        <com.facebook.login.widget.LoginButton
+            android:id="@+id/login_button"
+            android:layout_width="wrap_content"
+            android:layout_marginBottom="7sp"
+            android:layout_marginTop="7sp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:layout_gravity="center_horizontal"
+            android:textAlignment="center"
+            android:text="En vous inscrivant vous acceptez nos Conditions Générales d'Utilisation et notre Politique de confidentialité"/>
+    </LinearLayout>
+
+
+
+
+
+</LinearLayout>
