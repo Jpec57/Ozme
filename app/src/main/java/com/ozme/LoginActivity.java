@@ -1,9 +1,11 @@
 package com.ozme;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -27,15 +29,21 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
+        //Video management
+        VideoView videoview = (VideoView) findViewById(R.id.video_view);
+        Uri uri = Uri.parse("android.resource://"+getPackageName()+"/"+R.raw.accueil);
+        videoview.setVideoURI(uri);
+        videoview.start();
+
+        //End
+
+
         callbackManager = CallbackManager.Factory.create();
 
 
         loginButton = (LoginButton) findViewById(R.id.login_button);
         loginButton.setReadPermissions("email");
-        /*
-        // If using in a fragment
-        loginButton.setFragment(this);
-        */
+
 
         // Callback registration
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
@@ -66,8 +74,7 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(LoginResult loginResult) {
                         // loginResult will contain the AccessToken
-                        Toast.makeText(getApplicationContext(), "You are a genius, dude", Toast.LENGTH_LONG).show();
-                        Intent intent = new Intent(getApplicationContext(), HomePage.class);
+                        Intent intent = new Intent(getApplicationContext(), ChallengeChoiceActivity.class);
                         startActivity(intent);
                     }
 
