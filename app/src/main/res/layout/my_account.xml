@@ -15,7 +15,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="@drawable/blur_background"
+            android:background="@drawable/my_account_blur"
             android:layout_weight="1">
 
             <de.hdodenhof.circleimageview.CircleImageView
@@ -46,17 +46,33 @@
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="20sp"
-                    android:src="@drawable/edit"/>
+                    android:src="@drawable/my_account_edit"
+                    android:contentDescription="@string/todo" />
             </LinearLayout>
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
+                android:layout_marginLeft="50sp"
+                android:layout_marginRight="50sp"
+                android:padding="5sp"
+                android:id="@+id/challenge"
+                android:background="@drawable/my_account_rounded_button"
                 android:layout_below="@id/name"
-                android:background="@color/white"
-                android:textSize="25sp"
-                android:textColor="@color/colorPrimaryDark"
-                android:text="Ose me faire rire"/>
+                android:layout_centerHorizontal="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:id="@+id/challenge_text"
+                        android:layout_gravity="center_horizontal"
+                        android:textAlignment="center"
+                        android:text="Ose me faire rire comme ma soeur qui est la meilleure"/>
+
+
+            </LinearLayout>
+
+
 
         </RelativeLayout>
 
@@ -82,8 +98,9 @@
                     <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="60sp"
+                        android:id="@+id/add"
                         android:padding="10sp"
-                        android:src="@drawable/add_friend" />
+                        android:src="@drawable/my_account_add" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -102,7 +119,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="60sp"
                         android:padding="10sp"
-                        android:src="@drawable/setting" />
+                        android:id="@+id/settings"
+                        android:src="@drawable/my_account_settings" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -120,8 +138,9 @@
                     <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="60sp"
+                        android:id="@+id/help"
                         android:padding="10sp"
-                        android:src="@drawable/help_lamp" />
+                        android:src="@drawable/my_account_lampe" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -153,8 +172,11 @@
 
             <TextView
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="20sp"
                 android:layout_gravity="center_horizontal"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:background="@drawable/my_account_bandeau"
                 android:text="Vos notifications" />
 
             <ListView

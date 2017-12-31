@@ -17,7 +17,7 @@ import com.facebook.login.widget.LoginButton;
  Le SDK Facebook enregistre ces données dans les préférences communes et se charge
  de les paramétrer au début de la session. Vous pouvez déterminer si quelqu’un est
  actuellement connecté en vérifiant AccessToken.getCurrentAccessToken() et
-  Profile.getCurrentProfile().
+  ProfilePublic.getCurrentProfile().
  */
 
 public class LoginActivity extends AppCompatActivity {

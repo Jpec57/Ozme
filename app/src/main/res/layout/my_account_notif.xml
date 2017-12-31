@@ -7,7 +7,7 @@
         android:layout_width="0dp"
         android:layout_height="80sp"
         android:layout_weight="1"
-        android:src="@drawable/planet" />
+        android:src="@drawable/logo_notif" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -28,11 +28,19 @@
             android:text="Il y a 3 jours"
             android:layout_height="wrap_content" />
     </LinearLayout>
-
-    <ImageView
+    <LinearLayout
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:src="@drawable/close" />
+        android:layout_height="80sp"
+        android:paddingBottom="10sp"
+        android:layout_weight="1">
+        <ImageView
+            android:layout_width="20sp"
+            android:layout_height="20sp"
+            android:layout_gravity="center"
+            android:src="@drawable/my_account_delete" />
+
+    </LinearLayout>
+
+
 
 </LinearLayout>

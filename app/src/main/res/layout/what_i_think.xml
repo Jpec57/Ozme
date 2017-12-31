@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:padding="15sp"
+    android:layout_height="match_parent"
+    tools:ignore="UseCompoundDrawables">
+<ImageView
+    android:layout_width="15sp"
+    android:layout_marginRight="15sp"
+    android:paddingTop="5sp"
+    android:layout_height="15sp"
+    android:src="@drawable/profile_bullet_point_pink"
+    android:layout_marginEnd="15sp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/message"
+        android:text="Jeune fille ordinaire qui cherche une personne qui.."/>
+</LinearLayout>

@@ -3,6 +3,7 @@ package com.ozme;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -35,6 +36,9 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
     Context context;
     EditText editText;
     String beforeChanges;
+    String fb_name;
+    String birthday;
+    String profile_pic;
     TextView test;
     TextView next;
     ProfilePictureView profilePictureView;
@@ -55,7 +59,14 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (checkForForbiddenWords()){
-                    Intent intent = new Intent(getApplicationContext(), HomePage.class);
+                    SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("challenge", editText.getText().toString());
+                    editor.putString("first_name", fb_name);
+                    editor.putString("birthday", birthday);
+                    editor.putString("profil_pic", profile_pic);
+                    editor.apply();
+                    Intent intent = new Intent(getApplicationContext(), ProfilPerso.class);
                     startActivity(intent);
                 }else{
                     //Modal present to inform the user
@@ -70,6 +81,8 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
                                     dialog.dismiss();
                                 }
                             });
+
+
 
                     // 3. Get the AlertDialog from create()
                     AlertDialog dialog = builder.create();
@@ -126,7 +139,7 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
                     }
                 });
         Bundle parameters = new Bundle();
-        parameters.putString("fields", "id,name,link");
+        parameters.putString("fields", "id,first_name,link, birthday");
         request.setParameters(parameters);
         request.executeAsync();
 
@@ -181,6 +194,16 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
 
         }catch (Exception e){
 
+        }
+
+        //Get the user's name
+        try {
+            profile_pic = jsonObject.getString("id");
+            fb_name = jsonObject.getString("first_name");
+            birthday = jsonObject.getString("birthday");
+
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
