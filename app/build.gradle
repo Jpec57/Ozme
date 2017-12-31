@@ -35,5 +35,6 @@ dependencies {
     compile 'com.android.support:gridlayout-v7:26.1.0'
     compile 'de.hdodenhof:circleimageview:2.2.0'
     compile 'org.florescu.android.rangeseekbar:rangeseekbar-library:0.3.0'
+    compile 'com.theartofdev.edmodo:android-image-cropper:2.6.+'
 
 }
