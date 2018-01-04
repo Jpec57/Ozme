@@ -1,14 +1,11 @@
 package com.ozme;
 
-import android.annotation.SuppressLint;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -22,19 +19,23 @@ import android.view.View;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import android.content.ContentUris;
-import android.provider.MediaStore.Images;
-import android.view.ViewGroup;
+import java.util.ArrayList;
+
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
+
+/*
+DOCS :
+
+https://github.com/ArthurHub/Android-Image-Cropper
+ */
 
 public class MyPhotosActivity extends AppCompatActivity {
     View small1;
@@ -44,8 +45,14 @@ public class MyPhotosActivity extends AppCompatActivity {
     View small5;
     View big;
     RelativeLayout bigLayout;
-    String success;
-    View view;
+    String stockFile;
+    ImageView view;
+    ArrayList<ImageView> imgViews = new ArrayList<>();
+    SharedPreferences sharedPreferences;
+    ArrayList<String> imgsArray;
+    int index = 0;
+    String help="nothing";
+    TextView helpText;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
@@ -53,113 +60,102 @@ public class MyPhotosActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.my_photos_activity);
 
-        bigLayout=(RelativeLayout) findViewById(R.id.bigLayout);
-        big=(ImageView)findViewById(R.id.big);
-        small1=findViewById(R.id.small1);
-        small2=findViewById(R.id.small2);
-        small3=findViewById(R.id.small3);
-        small4=findViewById(R.id.small4);
-        small5=findViewById(R.id.small5);
+        //Initialization
+        bigLayout = (RelativeLayout) findViewById(R.id.bigLayout);
+        big = (ImageView) findViewById(R.id.big);
+        small1 = findViewById(R.id.small1);
+        small2 = findViewById(R.id.small2);
+        small3 = findViewById(R.id.small3);
+        small4 = findViewById(R.id.small4);
+        small5 = findViewById(R.id.small5);
         small1.setOnClickListener(onClickListener);
+        small2.setOnClickListener(onClickListener);
+        small3.setOnClickListener(onClickListener);
+        small4.setOnClickListener(onClickListener);
+        small5.setOnClickListener(onClickListener);
+        imgViews.add((ImageView) small1);
+        imgViews.add((ImageView) small2);
+        imgViews.add((ImageView) small3);
+        imgViews.add((ImageView) small4);
+        imgViews.add((ImageView) small5);
+        imgsArray = new ArrayList<>();
+        imgsArray.add("img1.jpg");
+        imgsArray.add("img2.jpg");
+        imgsArray.add("img3.jpg");
+        imgsArray.add("img4.jpg");
+        imgsArray.add("img5.jpg");
+        helpText=(TextView)findViewById(R.id.help);
 
-        Bitmap yourBitmap= BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.papa_mariage_enzo);
+
+
+        //Test for big image
+        Bitmap yourBitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.papa_mariage_enzo);
         Drawable d = new BitmapDrawable(getResources(), yourBitmap);
         bigLayout.removeView(big);
         ImageView imageView = new ImageView(this);
         imageView.setImageDrawable(d);
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         bigLayout.addView(imageView);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            bigLayout.setBackground(d);
-        }
-        success = saveToInternalStorage(yourBitmap);
-        Toast.makeText(getApplicationContext(), success, Toast.LENGTH_SHORT).show();
-        loadImageFromStorage(success);
+
+        saveToInternalStorage(yourBitmap, "profile.jpg", null);
+        Toast.makeText(getApplicationContext(), stockFile, Toast.LENGTH_SHORT).show();
+        imgLoader();
 
 
     }
 
-    View.OnClickListener onClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            switch (v.getId()){
-                case R.id.small1:
-                    break;
 
-            }
-        }
-    };
-
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
-    private void loadImageFromStorage(String path)
-    {
-
-        try {
-            File f=new File(path, "profile.jpg");
-            Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
-            final ImageView imageView = new ImageView(this);
-            imageView.setImageBitmap(b);
-            imageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    imgCrop(imageView, success);
+    private void imgLoader() {
+        for (int k = 0; k < imgsArray.size(); k++) {
+            try {
+                //index = 0;
+                //Same path as saveInternal
+                File f = new File(stockFile, imgsArray.get(k));
+                Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
+                view = imgViews.get(k);
+                final int finalK = k;
+                view.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        imgCrop(imgViews.get(finalK), stockFile + "/" + imgsArray.get(finalK));
+                    }
+                });
+                view.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                Bitmap yourBitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.papa_mariage_enzo);
+                Drawable d = new BitmapDrawable(getResources(), yourBitmap);
+                view.setImageDrawable(d);
+                if (b != null){
+                    view.setImageBitmap(b);
                 }
-            });
-            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            small1=(ImageView)findViewById(R.id.small1);
-            ViewGroup parent = (ViewGroup) small1.getParent();
-            parent.removeView(small1);
-            imageView.setId(R.id.small1);
-            parent.addView(imageView, 0);
+                Toast.makeText(getApplicationContext(), "Load success "+finalK, Toast.LENGTH_LONG).show();
 
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
+            } catch (Exception e) {
+                return;
+                //Toast.makeText(getApplicationContext(), "Load failed : "+e.getMessage(), Toast.LENGTH_LONG).show();
 
-    }
-    private void imgSet(Uri uri){
-        final ImageView imageView = new ImageView(this);
-        imageView.setImageURI(uri);
-        imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                imgCrop(imageView, success);
             }
-        });
-        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        small1=(ImageView)findViewById(R.id.small1);
-        ViewGroup parent = (ViewGroup) small1.getParent();
-        parent.removeView(small1);
-        imageView.setId(R.id.small1);
-        parent.addView(imageView, 0);
+        }
+
 
     }
 
-    private void imgCrop (View v, String uri){
-        view=v;
-        Uri imageUri= Uri.parse(uri);
-        // start picker to get image for cropping and then use the image in cropping activity
-        CropImage.activity()
-                .setGuidelines(CropImageView.Guidelines.ON)
-                .start(this);
-// start cropping activity for pre-acquired image saved on the device
-        CropImage.activity(imageUri)
-                .start(this);
-    }
-    private String saveToInternalStorage(Bitmap bitmapImage){
+    private String saveToInternalStorage(Bitmap bitmapImage, String path, Uri crop) {
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
-        // path to /data/data/yourapp/app_data/imageDir
+        // path to /data/data/com.ozme/app_data/Images
         File directory = cw.getDir("Images", Context.MODE_PRIVATE);
-        // Create imageDir
-        File mypath=new File(directory,"profile.jpg");
+        // Create imageDir only if doesn't exist already
+        File mypath = new File(directory, path);
 
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(mypath);
             // Use the compress method on the BitMap object to write image to the OutputStream
+            if (crop != null){
+                bitmapImage = MediaStore.Images.Media.getBitmap(this.getContentResolver(), crop);
+                helpText.setText(help+" \n OHOH");
+            }
             bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -169,72 +165,71 @@ public class MyPhotosActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
-        return directory.getAbsolutePath();
+        stockFile = directory.getAbsolutePath();
+        return mypath.getAbsolutePath();
     }
-
 
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
+            String res = "Not saved";
             if (resultCode == RESULT_OK) {
                 Uri resultUri = result.getUri();
-                imgSet(resultUri);
+                Toast.makeText(getApplicationContext(), resultUri.getPath(), Toast.LENGTH_SHORT).show();
+                try {
+                    imgViews.get(0).setImageURI(resultUri);
+                    help = saveToInternalStorage(result.getBitmap(), "img" + (index+1) + ".jpg", resultUri);
+                    helpText.setText(help);
 
+                }catch (Exception e){
+                    Toast.makeText(getApplicationContext(),res+" ntm", Toast.LENGTH_LONG).show();
+                }
+                /*
+                Toast.makeText(getApplicationContext(), "SAVED : "+res, Toast.LENGTH_LONG).show();
+                //Depending on the view v we have initialized during the onclick, we set the right img
+                //imgSet(resultUri, view);
+                imgLoader();
+                */
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
-                Toast.makeText(getApplicationContext(), error.toString(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),res+" "+error.toString(), Toast.LENGTH_LONG).show();
             }
         }
     }
 
-    /**
-     * A copy of the Android internals StoreThumbnail method, it used with the insertImage to
-     * populate the android.provider.MediaStore.Images.Media#insertImage with all the correct
-     * meta data. The StoreThumbnail method is private so it must be duplicated here.
-     * @see android.provider.MediaStore.Images.Media (StoreThumbnail private method)
-     */
-    private static final Bitmap storeThumbnail(
-            ContentResolver cr,
-            Bitmap source,
-            long id,
-            float width,
-            float height,
-            int kind) {
 
-        // create the matrix to scale it
-        Matrix matrix = new Matrix();
-
-        float scaleX = width / source.getWidth();
-        float scaleY = height / source.getHeight();
-
-        matrix.setScale(scaleX, scaleY);
-
-        Bitmap thumb = Bitmap.createBitmap(source, 0, 0,
-                source.getWidth(),
-                source.getHeight(), matrix,
-                true
-        );
-
-        ContentValues values = new ContentValues(4);
-        values.put(MediaStore.Images.Thumbnails.KIND,kind);
-        values.put(MediaStore.Images.Thumbnails.IMAGE_ID,(int)id);
-        values.put(MediaStore.Images.Thumbnails.HEIGHT,thumb.getHeight());
-        values.put(MediaStore.Images.Thumbnails.WIDTH,thumb.getWidth());
-
-        Uri url = cr.insert(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, values);
-
-        try {
-            OutputStream thumbOut = cr.openOutputStream(url);
-            thumb.compress(Bitmap.CompressFormat.JPEG, 100, thumbOut);
-            thumbOut.close();
-            return thumb;
-        } catch (FileNotFoundException ex) {
-            return null;
-        } catch (IOException ex) {
-            return null;
-        }
+    private void imgCrop(ImageView v, String uri) {
+        view = v;
+        Uri imageUri = Uri.parse(uri);
+        // start picker to get image for cropping and then use the image in cropping activity
+        CropImage.activity()
+                .setGuidelines(CropImageView.Guidelines.ON)
+                .start(this);
+// start cropping activity for pre-acquired image saved on the device
+        CropImage.activity(imageUri)
+                .start(this);
     }
+
+    View.OnClickListener onClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()){
+                case R.id.small1:
+                    imgCrop(imgViews.get(0), stockFile+"/img1.jpg");
+                    break;
+                case R.id.small2:
+                    break;
+                case R.id.small3:
+                    break;
+                case R.id.small4:
+                    break;
+                case R.id.small5:
+                    break;
+
+            }
+        }
+    };
 
 }
