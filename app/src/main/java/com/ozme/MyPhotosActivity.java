@@ -52,7 +52,6 @@ public class MyPhotosActivity extends AppCompatActivity {
     ArrayList<String> imgsArray;
     int index = 0;
     String help="nothing";
-    TextView helpText;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
@@ -62,7 +61,7 @@ public class MyPhotosActivity extends AppCompatActivity {
 
         //Initialization
         bigLayout = (RelativeLayout) findViewById(R.id.bigLayout);
-        big = (ImageView) findViewById(R.id.big);
+        big = findViewById(R.id.big);
         small1 = findViewById(R.id.small1);
         small2 = findViewById(R.id.small2);
         small3 = findViewById(R.id.small3);
@@ -73,32 +72,27 @@ public class MyPhotosActivity extends AppCompatActivity {
         small3.setOnClickListener(onClickListener);
         small4.setOnClickListener(onClickListener);
         small5.setOnClickListener(onClickListener);
+        big.setOnClickListener(onClickListener);
         imgViews.add((ImageView) small1);
         imgViews.add((ImageView) small2);
         imgViews.add((ImageView) small3);
         imgViews.add((ImageView) small4);
         imgViews.add((ImageView) small5);
+        imgViews.add((ImageView) big);
         imgsArray = new ArrayList<>();
         imgsArray.add("img1.jpg");
         imgsArray.add("img2.jpg");
         imgsArray.add("img3.jpg");
         imgsArray.add("img4.jpg");
         imgsArray.add("img5.jpg");
-        helpText=(TextView)findViewById(R.id.help);
+        imgsArray.add("img6.jpg");
 
 
 
         //Test for big image
         Bitmap yourBitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.papa_mariage_enzo);
-        Drawable d = new BitmapDrawable(getResources(), yourBitmap);
-        bigLayout.removeView(big);
-        ImageView imageView = new ImageView(this);
-        imageView.setImageDrawable(d);
-        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        bigLayout.addView(imageView);
-
-        saveToInternalStorage(yourBitmap, "profile.jpg", null);
-        Toast.makeText(getApplicationContext(), stockFile, Toast.LENGTH_SHORT).show();
+         //Profile pic
+        saveToInternalStorage(yourBitmap, "test.jpg", null);
         imgLoader();
 
 
@@ -108,18 +102,10 @@ public class MyPhotosActivity extends AppCompatActivity {
     private void imgLoader() {
         for (int k = 0; k < imgsArray.size(); k++) {
             try {
-                //index = 0;
                 //Same path as saveInternal
                 File f = new File(stockFile, imgsArray.get(k));
                 Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
                 view = imgViews.get(k);
-                final int finalK = k;
-                view.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        imgCrop(imgViews.get(finalK), stockFile + "/" + imgsArray.get(finalK));
-                    }
-                });
                 view.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 Bitmap yourBitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.papa_mariage_enzo);
                 Drawable d = new BitmapDrawable(getResources(), yourBitmap);
@@ -127,12 +113,8 @@ public class MyPhotosActivity extends AppCompatActivity {
                 if (b != null){
                     view.setImageBitmap(b);
                 }
-                Toast.makeText(getApplicationContext(), "Load success "+finalK, Toast.LENGTH_LONG).show();
-
             } catch (Exception e) {
-                return;
-                //Toast.makeText(getApplicationContext(), "Load failed : "+e.getMessage(), Toast.LENGTH_LONG).show();
-
+                //No img --> cannot load
             }
         }
 
@@ -150,9 +132,9 @@ public class MyPhotosActivity extends AppCompatActivity {
         try {
             fos = new FileOutputStream(mypath);
             // Use the compress method on the BitMap object to write image to the OutputStream
+            //if crop isn't null, we have to get the img from the cache to save it
             if (crop != null){
                 bitmapImage = MediaStore.Images.Media.getBitmap(this.getContentResolver(), crop);
-                helpText.setText(help+" \n OHOH");
             }
             bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
 
@@ -179,22 +161,15 @@ public class MyPhotosActivity extends AppCompatActivity {
                 Uri resultUri = result.getUri();
                 Toast.makeText(getApplicationContext(), resultUri.getPath(), Toast.LENGTH_SHORT).show();
                 try {
-                    imgViews.get(0).setImageURI(resultUri);
+                    imgViews.get(index).setImageURI(resultUri);
                     help = saveToInternalStorage(result.getBitmap(), "img" + (index+1) + ".jpg", resultUri);
-                    helpText.setText(help);
-
                 }catch (Exception e){
                     Toast.makeText(getApplicationContext(),res+" ntm", Toast.LENGTH_LONG).show();
                 }
-                /*
-                Toast.makeText(getApplicationContext(), "SAVED : "+res, Toast.LENGTH_LONG).show();
-                //Depending on the view v we have initialized during the onclick, we set the right img
-                //imgSet(resultUri, view);
-                imgLoader();
-                */
+
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
-                Toast.makeText(getApplicationContext(),res+" "+error.toString(), Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(),res+" "+error.toString(), Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -217,18 +192,27 @@ public class MyPhotosActivity extends AppCompatActivity {
         public void onClick(View v) {
             switch (v.getId()){
                 case R.id.small1:
-                    imgCrop(imgViews.get(0), stockFile+"/img1.jpg");
+                    index=0;
                     break;
                 case R.id.small2:
+                    index=1;
                     break;
                 case R.id.small3:
+                    index=2;
                     break;
                 case R.id.small4:
+                    index=3;
                     break;
                 case R.id.small5:
+                    index=4;
+                    break;
+                case R.id.big:
+                    index=5;
                     break;
 
             }
+            imgCrop(imgViews.get(index), stockFile+"/img"+(index+1)+".jpg");
+
         }
     };
 
