@@ -23,6 +23,7 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_margin="5sp"
+                android:id="@+id/layout1"
                 android:layout_height="100sp">
 
                 <ImageView

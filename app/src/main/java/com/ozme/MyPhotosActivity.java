@@ -1,12 +1,17 @@
 package com.ozme;
 
+import android.content.ClipData;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
@@ -14,6 +19,8 @@ import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.DragEvent;
+import android.view.MotionEvent;
 import android.view.View;
 
 
@@ -23,7 +30,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,6 +54,7 @@ public class MyPhotosActivity extends AppCompatActivity {
     View small5;
     View big;
     RelativeLayout bigLayout;
+    RelativeLayout layout1;
     String stockFile;
     ImageView view;
     ArrayList<ImageView> imgViews = new ArrayList<>();
@@ -87,6 +97,8 @@ public class MyPhotosActivity extends AppCompatActivity {
         imgsArray.add("img5.jpg");
         imgsArray.add("img6.jpg");
 
+        layout1 = (RelativeLayout)findViewById(R.id.layout1);
+
 
 
         //Test for big image
@@ -94,6 +106,8 @@ public class MyPhotosActivity extends AppCompatActivity {
          //Profile pic
         saveToInternalStorage(yourBitmap, "test.jpg", null);
         imgLoader();
+        imgDragAndDrop();
+
 
 
     }
@@ -173,6 +187,68 @@ public class MyPhotosActivity extends AppCompatActivity {
             }
         }
     }
+
+    private void imgDragAndDrop(){
+        for (int i=0; i<imgViews.size(); i++){
+            imgViews.get(i).setTag("img"+i);
+
+            imgViews.get(i).setOnLongClickListener(onLongClickListener);
+            imgViews.get(i).setOnDragListener(onDragListener);
+        }
+    }
+
+    View.OnLongClickListener onLongClickListener = new View.OnLongClickListener() {
+        @Override
+        public boolean onLongClick(View v) {
+            ClipData data = ClipData.newPlainText("", "");
+            View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(
+                    v);
+            v.startDrag(data, shadowBuilder, v, 0);
+            return false;
+        }
+    };
+
+    View.OnDragListener onDragListener = new View.OnDragListener() {
+        @Override
+        public boolean onDrag(View dropZone, DragEvent event) {
+            int action = event.getAction();
+            switch (action) {
+                case DragEvent.ACTION_DRAG_STARTED:
+                    // Start listening
+                    break;
+                case DragEvent.ACTION_DRAG_ENTERED:
+                    //If we get in a zone covered by a drag event
+                    break;
+                case DragEvent.ACTION_DRAG_EXITED:
+                    //If we get out of the zone covered by drag event
+                    break;
+                case DragEvent.ACTION_DROP:
+                    int zoneId=0;
+                    int draggedId=0;
+                    //dropZone represents the view we are in
+                    //draggedView represents the view we are dragging
+                    View draggedView = (View) event.getLocalState();
+                    for (int i=0; i<imgViews.size(); i++){
+                        if (dropZone.getId() == imgViews.get(i).getId()){
+                            zoneId=i;
+                        }
+                        if (draggedView.getId() == imgViews.get(i).getId()){
+                            draggedId=i;
+                        }
+                    }
+                    Drawable target = imgViews.get(zoneId).getDrawable();
+                    imgViews.get(zoneId).setImageDrawable(imgViews.get(draggedId).getDrawable());
+                    imgViews.get(draggedId).setImageDrawable(target);
+                    break;
+                case DragEvent.ACTION_DRAG_ENDED:
+                    //Stop listening to event
+                    return false;
+                default:
+                    break;
+            }
+            return true;
+        }
+    };
 
 
     private void imgCrop(ImageView v, String uri) {
