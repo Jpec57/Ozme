@@ -5,8 +5,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Display;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -14,15 +17,20 @@ import android.widget.TextView;
 
 import com.facebook.login.widget.ProfilePictureView;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class ProfilPerso extends AppCompatActivity {
     TextView challenge_text;
     TextView fb_name_age;
     ImageView photo;
+    Button next;
     ProfilePictureView profilePictureView;
     SeekBar seekBar1;
     SeekBar seekBar2;
     SeekBar seekBar3;
     SharedPreferences sharedPreferences;
+    SharedPreferences sharedPreferences2;
     Display display;
 
     @SuppressLint("SetTextI18n")
@@ -34,8 +42,11 @@ public class ProfilPerso extends AppCompatActivity {
         pageLayout();
 
         sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
+        sharedPreferences2=getSharedPreferences("activities", MODE_PRIVATE);
         challenge_text=(TextView)findViewById(R.id.challenge_text);
         fb_name_age=(TextView)findViewById(R.id.fb_name_age);
+        next=(Button)findViewById(R.id.next);
+        next.setOnClickListener(onClickListener);
         profilePictureView=(ProfilePictureView)findViewById(R.id.test);
         photo=(ImageView)findViewById(R.id.photo);
         photo.setOnClickListener(onClickListener);
@@ -43,6 +54,8 @@ public class ProfilPerso extends AppCompatActivity {
         fbProfilePic();
         bubbleSettings();
         setSeekBar();
+
+        activityRecycler();
 
 
 
@@ -62,12 +75,35 @@ public class ProfilPerso extends AppCompatActivity {
                     Intent intent1 = new Intent(getApplicationContext(), ChallengeChoiceActivity.class);
                     startActivity(intent1);
                     break;
+                case R.id.next:
+                    Intent intent2 = new Intent(getApplicationContext(), Main2Activity.class);
+                    startActivity(intent2);
+                    break;
 
                 default:
                     break;
             }
         }
     };
+
+    private void activityRecycler(){
+        RecyclerView recycler = (RecyclerView)findViewById(R.id.recycler);
+        // use this setting to
+        // improve performance if you know that changes
+        // in content do not change the layout size
+        // of the RecyclerView
+        recycler.setHasFixedSize(true);
+        recycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+
+        List<String> desc = Arrays.asList("Musique", "Voyage", "Cinéma", "Cuisine", "Voyage", "Avenged");
+        int[] id = {R.drawable.travel, R.drawable.a7x, R.drawable.papa_mariage_enzo, R.drawable.gourmandise, R.drawable.travel, R.drawable.a7x};
+        //Construction of the array shades
+        boolean[] shades = {true, false, false, true, true, true};
+        for (int k=0; k<desc.size(); k++){
+            shades[k]=sharedPreferences2.getBoolean(k+"", true);
+        }
+        recycler.setAdapter(new ProfileWhatILikeAdapter(this, desc, id, shades));
+    }
 
     private void saveSeekBars(int seekbar, int progress){
         SharedPreferences.Editor editor = sharedPreferences.edit();

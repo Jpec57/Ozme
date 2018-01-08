@@ -199,101 +199,17 @@
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
+            <!-- A sScrollView can only have one child-->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="5sp"
-                    android:layout_marginRight="5sp"
-                    android:orientation="vertical">
-
-                    <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
-                        android:layout_width="70sp"
-                        android:layout_height="70sp"
-                        android:src="@drawable/goku_training"
-                        app:civ_border_color="#FF000000"
-                        app:civ_border_width="2dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        android:text="Musculation" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="5sp"
-                    android:layout_marginLeft="5sp"
-                    android:layout_marginRight="5sp"
-                    android:layout_marginStart="5sp"
-                    android:orientation="vertical">
-
-                    <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
-                        android:layout_width="70sp"
-                        android:layout_height="70sp"
-                        android:src="@drawable/travel"
-                        app:civ_border_color="#FF000000"
-                        app:civ_border_width="2dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        android:text="Voyage" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="5sp"
-                    android:layout_marginLeft="5sp"
-                    android:layout_marginRight="5sp"
-                    android:layout_marginStart="5sp"
-                    android:orientation="vertical">
-
-                    <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
-                        android:layout_width="70sp"
-                        android:layout_height="70sp"
-                        android:src="@drawable/loup"
-                        app:civ_border_color="#FF000000"
-                        app:civ_border_width="2dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        android:text="Cinéma" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="5sp"
-                    android:layout_marginLeft="5sp"
-                    android:layout_marginRight="5sp"
-                    android:layout_marginStart="5sp"
-                    android:orientation="vertical">
-
-                    <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
-                        android:layout_width="70sp"
-                        android:layout_height="70sp"
-                        android:src="@drawable/goku_training"
-                        app:civ_border_color="#FF000000"
-                        app:civ_border_width="2dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        android:text="Cinéma" />
-                </LinearLayout>
+                <android.support.v7.widget.RecyclerView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="horizontal"
+                    android:orientation="horizontal"
+                    android:id="@+id/recycler"/>
             </LinearLayout>
             </HorizontalScrollView>
 
@@ -442,6 +358,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="5sp"
                 android:text="Choisissez une phrase à compléter"/>
             <TextView
                 android:layout_width="wrap_content"
@@ -468,7 +385,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="10sp"
+                    android:textSize="12sp"
                     android:id="@+id/message"
                     android:text="Choisissez un exemple"/>
             </LinearLayout>
@@ -489,6 +406,7 @@
                 <ImageView
                     android:layout_width="15sp"
                     android:paddingTop="5sp"
+                    android:layout_marginTop="5sp"
                     android:layout_height="15sp"
                     android:layout_marginRight="30sp"
                     android:layout_marginEnd="30sp"
@@ -496,9 +414,18 @@
                 <EditText
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="10sp"
+                    android:textSize="12sp"
                     android:hint="Ecrivez ce que vous voulez..."/>
             </LinearLayout>
+
+                <Button
+                    android:layout_width="70sp"
+                    android:layout_height="35sp"
+                    android:id="@+id/next"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/rounded_button_oz"
+                    android:text="Suivant"/>
+
 
 
         </LinearLayout>
