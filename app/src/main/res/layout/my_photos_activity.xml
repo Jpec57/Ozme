@@ -29,6 +29,7 @@
                 <ImageView
                     android:layout_width="match_parent"
                     android:id="@+id/small1"
+                    android:src="@drawable/photo_empty"
                     android:layout_height="100sp"/>
                 <ImageView
                     android:layout_width="20sp"
@@ -45,6 +46,7 @@
                     android:layout_alignParentStart="true"
                     android:layout_alignParentLeft="true"
                     android:layout_marginLeft="5sp"
+                    android:id="@+id/add_delete1"
                     android:src="@drawable/photo_add"
                     android:layout_marginStart="5sp" />
             </RelativeLayout>
@@ -74,6 +76,7 @@
                     android:layout_alignParentStart="true"
                     android:layout_alignParentLeft="true"
                     android:layout_marginLeft="5sp"
+                    android:id="@+id/add_delete2"
                     android:src="@drawable/photo_add"
                     android:layout_marginStart="5sp" />
             </RelativeLayout>
@@ -103,6 +106,7 @@
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentStart="true"
                 android:layout_alignParentLeft="true"
+                android:id="@+id/add_delete6"
                 android:src="@drawable/photo_delete" />
         </RelativeLayout>
     </LinearLayout>
@@ -141,6 +145,7 @@
                 android:layout_alignParentLeft="true"
                 android:layout_marginLeft="5sp"
                 android:src="@drawable/photo_add"
+                android:id="@+id/add_delete3"
                 android:layout_marginStart="5sp" />
         </RelativeLayout>
         <RelativeLayout
@@ -170,6 +175,7 @@
                 android:layout_alignParentLeft="true"
                 android:layout_marginLeft="5sp"
                 android:src="@drawable/photo_add"
+                android:id="@+id/add_delete4"
                 android:layout_marginStart="5sp" />
         </RelativeLayout>
         <RelativeLayout
@@ -198,6 +204,7 @@
                 android:layout_alignParentStart="true"
                 android:layout_alignParentLeft="true"
                 android:layout_marginLeft="5sp"
+                android:id="@+id/add_delete5"
                 android:src="@drawable/photo_add"
                 android:layout_marginStart="5sp" />
 

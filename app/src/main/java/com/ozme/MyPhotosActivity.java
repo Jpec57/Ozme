@@ -1,5 +1,6 @@
 package com.ozme;
 
+import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -14,6 +15,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
@@ -53,15 +55,25 @@ public class MyPhotosActivity extends AppCompatActivity {
     View small4;
     View small5;
     View big;
+    ImageView add_delete1;
+    ImageView add_delete2;
+    ImageView add_delete3;
+    ImageView add_delete4;
+    ImageView add_delete5;
+    ImageView add_delete6;
     RelativeLayout bigLayout;
     RelativeLayout layout1;
     String stockFile;
     ImageView view;
     ArrayList<ImageView> imgViews = new ArrayList<>();
+    ArrayList<ImageView> addDelete = new ArrayList<>();
     SharedPreferences sharedPreferences;
     ArrayList<String> imgsArray;
     int index = 0;
     String help="nothing";
+    int[] state={0,0,0,0,0,0};
+    int zoneId=0;
+    int draggedId=0;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
@@ -96,6 +108,25 @@ public class MyPhotosActivity extends AppCompatActivity {
         imgsArray.add("img4.jpg");
         imgsArray.add("img5.jpg");
         imgsArray.add("img6.jpg");
+        add_delete1=(ImageView)findViewById(R.id.add_delete1);
+        add_delete2=(ImageView)findViewById(R.id.add_delete2);
+        add_delete3=(ImageView)findViewById(R.id.add_delete3);
+        add_delete4=(ImageView)findViewById(R.id.add_delete4);
+        add_delete5=(ImageView)findViewById(R.id.add_delete5);
+        add_delete6=(ImageView)findViewById(R.id.add_delete6);
+        add_delete1.setOnClickListener(onClickListener2);
+        add_delete2.setOnClickListener(onClickListener2);
+        add_delete3.setOnClickListener(onClickListener2);
+        add_delete4.setOnClickListener(onClickListener2);
+        add_delete5.setOnClickListener(onClickListener2);
+        add_delete6.setOnClickListener(onClickListener2);
+        addDelete.add(add_delete1);
+        addDelete.add(add_delete2);
+        addDelete.add(add_delete3);
+        addDelete.add(add_delete4);
+        addDelete.add(add_delete5);
+        addDelete.add(add_delete6);
+
 
         layout1 = (RelativeLayout)findViewById(R.id.layout1);
 
@@ -121,11 +152,18 @@ public class MyPhotosActivity extends AppCompatActivity {
                 Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
                 view = imgViews.get(k);
                 view.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                Bitmap yourBitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.papa_mariage_enzo);
-                Drawable d = new BitmapDrawable(getResources(), yourBitmap);
-                view.setImageDrawable(d);
+                Bitmap yourBitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.photo_empty);
+                view.setImageBitmap(yourBitmap);
+                //State is used to know if there is an image or not
                 if (b != null){
                     view.setImageBitmap(b);
+                    //There is something
+                    state[k]=1;
+                    addDelete.get(k).setImageDrawable(getResources().getDrawable(R.drawable.photo_delete));
+                }else{
+                    //There isn't
+                    state[k]=0;
+                    addDelete.get(k).setImageDrawable(getResources().getDrawable(R.drawable.photo_add));
                 }
             } catch (Exception e) {
                 //No img --> cannot load
@@ -173,12 +211,13 @@ public class MyPhotosActivity extends AppCompatActivity {
             String res = "Not saved";
             if (resultCode == RESULT_OK) {
                 Uri resultUri = result.getUri();
-                Toast.makeText(getApplicationContext(), resultUri.getPath(), Toast.LENGTH_SHORT).show();
                 try {
                     imgViews.get(index).setImageURI(resultUri);
+                    addDelete.get(index).setImageDrawable(getResources().getDrawable(R.drawable.photo_delete));
+                    state[index]=1;
                     help = saveToInternalStorage(result.getBitmap(), "img" + (index+1) + ".jpg", resultUri);
                 }catch (Exception e){
-                    Toast.makeText(getApplicationContext(),res+" ntm", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(),res+" ERROR", Toast.LENGTH_LONG).show();
                 }
 
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
@@ -223,8 +262,8 @@ public class MyPhotosActivity extends AppCompatActivity {
                     //If we get out of the zone covered by drag event
                     break;
                 case DragEvent.ACTION_DROP:
-                    int zoneId=0;
-                    int draggedId=0;
+                    zoneId=0;
+                    draggedId=0;
                     //dropZone represents the view we are in
                     //draggedView represents the view we are dragging
                     View draggedView = (View) event.getLocalState();
@@ -236,9 +275,39 @@ public class MyPhotosActivity extends AppCompatActivity {
                             draggedId=i;
                         }
                     }
+                    //If the zone doesn't have an img, we must not exchange
+                    if ((draggedId == 5)&&(state[zoneId]==0)){
+                        toastMaker("Permutation impossible : il n'y a pas d'image en position "+(zoneId+2));
+                        break;
+                    }
+
+                    //We try to drag an empty image
+                    if (state[draggedId]==0){
+                        toastMaker("Permutation impossible : vous devez mettre une image sur l'emplacement "+(draggedId+2)+" d'abord");
+                        break;
+                    }
+
+                    if (state[zoneId]==0){
+                        //There won't be an image after the drag anymore, change the state
+                        state[draggedId]=0;
+                        //Change the icons
+                        addDelete.get(zoneId).setImageDrawable(getResources().getDrawable(R.drawable.photo_delete));
+                        addDelete.get(draggedId).setImageDrawable(getResources().getDrawable(R.drawable.photo_add));
+                        //Delete the file
+                        File f = new File(stockFile, imgsArray.get(draggedId));
+                        f.delete();
+
+                    }
+
+                    state[zoneId]=1;
+
+                    //We exchange the drawables
                     Drawable target = imgViews.get(zoneId).getDrawable();
                     imgViews.get(zoneId).setImageDrawable(imgViews.get(draggedId).getDrawable());
                     imgViews.get(draggedId).setImageDrawable(target);
+
+                    //We save the change in the internal storage
+                    new asyncChange().execute();
                     break;
                 case DragEvent.ACTION_DRAG_ENDED:
                     //Stop listening to event
@@ -291,5 +360,126 @@ public class MyPhotosActivity extends AppCompatActivity {
 
         }
     };
+
+    View.OnClickListener onClickListener2 = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            int indexAddDelete=0;
+            switch (v.getId()){
+                case R.id.add_delete1:
+                    break;
+                case R.id.add_delete2:
+                    indexAddDelete=1;
+                    break;
+                case R.id.add_delete3:
+                    indexAddDelete=2;
+                    break;
+                case R.id.add_delete4:
+                    //Number Four on screen
+                    indexAddDelete=3;
+                    break;
+                case R.id.add_delete5:
+                    indexAddDelete=4;
+                    break;
+                case R.id.add_delete6:
+                    indexAddDelete=5;
+                    break;
+
+
+
+            }
+            if (indexAddDelete != 5){
+                addDelete(indexAddDelete);
+            }
+        }
+    };
+
+
+
+    public static Bitmap drawableToBitmap (Drawable drawable) {
+        Bitmap bitmap = null;
+
+        if (drawable instanceof BitmapDrawable) {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+            if(bitmapDrawable.getBitmap() != null) {
+                return bitmapDrawable.getBitmap();
+            }
+        }
+
+        if(drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+            bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888); // Single color bitmap will be created of 1x1 pixel
+        } else {
+            bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        }
+
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return bitmap;
+    }
+
+
+
+    private void addDelete(int index){
+            if (state[index] == 0) {
+                //There is nothing in it
+                imgCrop(imgViews.get(index), stockFile+"/"+imgsArray.get(index));
+
+            } else {
+                //There already is an image
+                File f = new File(stockFile, imgsArray.get(index));
+                //We delete the file containing the img
+                if (f.exists()){
+                    if (f.delete()){
+                        Toast.makeText(this, "Delete completed "+imgsArray.get(index), Toast.LENGTH_SHORT).show();
+                    }else{
+                        Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
+                    }
+                }else{
+                    state[index]=0;
+                    toastMaker("Not existing file : "+stockFile+"/"+imgsArray.get(index));
+                }
+                finish();
+                Intent intent = getIntent().addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(intent);
+            }
+
+
+    }
+
+    public void toastMaker(String string){
+        Toast.makeText(getApplicationContext(), string, Toast.LENGTH_SHORT).show();
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    class asyncChange extends AsyncTask<Void, Void, String> {
+
+        @Override
+        protected void onPreExecute()
+        {
+            super.onPreExecute();
+        }
+        @Override
+        protected String doInBackground(Void... arg0)
+        {
+            Drawable target = imgViews.get(zoneId).getDrawable();
+            saveToInternalStorage(drawableToBitmap(target), imgsArray.get(zoneId), null);
+            if (state[zoneId]!=0) {
+                saveToInternalStorage(drawableToBitmap(imgViews.get(draggedId).getDrawable()), imgsArray.get(draggedId), null);
+            }
+            return "";
+        }
+
+        @Override
+        protected void onPostExecute(String result)
+        {
+            Toast.makeText(getApplicationContext(), "Fini", Toast.LENGTH_SHORT).show();
+            super.onPostExecute(result);
+
+        }
+    }
+
+
+
 
 }
