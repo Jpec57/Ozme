@@ -45,7 +45,6 @@ public class MyAccount extends AppCompatActivity {
         roundImage = new RoundImage(bm);
         profile.setImageDrawable(roundImage);
 
-        Display display = getWindowManager().getDefaultDisplay();
         challenge_text=(TextView)findViewById(R.id.challenge_text);
 
 
