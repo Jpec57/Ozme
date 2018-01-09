@@ -28,52 +28,66 @@
     <ImageView
         android:layout_width="18sp"
         android:layout_height="18sp"
-        android:src="@drawable/ic_close_white_24dp"
+        android:src="@drawable/timeline_delete"
+        android:layout_marginTop="7sp"
+        android:layout_marginEnd="7sp"
+        android:layout_marginRight="7sp"
         android:id="@+id/close"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"/>
+
     <TextView
+        android:id="@+id/name_age"
         android:layout_width="wrap_content"
-        android:textColor="@color/white"
-        android:textStyle="bold"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/desc"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="7sp"
+        android:layout_marginStart="7sp"
         android:shadowColor="@color/colorPrimaryDark"
         android:shadowDx="2"
         android:shadowDy="2"
         android:shadowRadius="0.05"
-        android:textSize="16sp"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/desc"
-        android:id="@+id/name_age"
-        android:text="Jean-Paul BELLA, 21"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:id="@+id/desc"
-        android:layout_height="wrap_content"
-        android:textSize="12sp"
+        android:text="Jean-Paul BELLA, 21"
         android:textColor="@color/white"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="7sp"
+        android:layout_marginStart="7sp"
+        android:layout_marginBottom="12dp"
         android:shadowColor="@color/colorPrimaryDark"
         android:shadowDx="2"
         android:shadowDy="2"
         android:shadowRadius="0.05"
         android:text="Ingénieur informatique"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="10sp"
-        />
+        android:textColor="@color/white"
+        android:textSize="12sp" />
+
     <TextView
+        android:id="@+id/time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textColor="@color/white"
-        android:shadowColor="@color/colorPrimaryDark"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="7sp"
+        android:layout_marginLeft="7sp"
+        android:layout_marginStart="7sp"
+        android:shadowColor="@color/colorPrimaryDark"
         android:shadowDx="2"
         android:shadowDy="2"
-        android:id="@+id/time"
         android:shadowRadius="4"
-        android:text="Vu il y a 2 minutes"/>
+        android:text="Vu il y a 2 minutes"
+        android:textColor="@color/white"
+        android:textSize="14sp" />
 
 </RelativeLayout>
 
@@ -87,23 +101,22 @@
         android:layout_marginRight="8sp"
         android:weightSum="2"
         android:orientation="horizontal"
-        android:paddingTop="2sp"
+        android:paddingTop="5sp"
+        android:paddingBottom="5sp"
         android:background="@drawable/timeline_bottom"
         android:baselineAligned="false">
         <ImageView
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="7sp"
-            android:layout_marginBottom="-5sp"
-            android:layout_height="40sp"
+            android:layout_height="30sp"
             android:id="@+id/heart"
-            android:src="@drawable/heart"/>
+            android:src="@drawable/oz"/>
         <ImageView
             android:layout_width="0dp"
             android:layout_weight="1"
             android:id="@+id/lightning"
             android:layout_height="30sp"
-            android:src="@drawable/lightning"/>
+            android:src="@drawable/timeline_flash"/>
     </LinearLayout>
 
 </LinearLayout>

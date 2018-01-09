@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.ozme.TimelineActivity">
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/my_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="40sp"
+        style="@style/HeaderBar">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5sp"
+            android:id="@+id/account"
+            android:src="@drawable/ic_account_circle_white_24dp"
+            android:layout_marginStart="5sp"
+            android:contentDescription="@string/todo" />
+        <!--
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:textColor="@color/white"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+            android:layout_gravity="center"/>-->
+        <RelativeLayout
+            android:layout_width="35sp"
+            android:layout_height="35sp"
+            android:background="@drawable/timeline_logo_background"
+            android:layout_gravity="center">
+            <ImageView
+                android:layout_width="30sp"
+                android:layout_height="30sp"
+                android:layout_marginLeft="2sp"
+                android:layout_marginStart="2sp"
+                android:layout_marginTop="2sp"
+                android:src="@drawable/logo_notif"/>
+        </RelativeLayout>
+
+
+    </android.support.v7.widget.Toolbar>
+    <android.support.v4.view.ViewPager
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/view_pager"/>
+
+
+</LinearLayout>

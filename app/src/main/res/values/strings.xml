@@ -18,5 +18,6 @@
     <string name="logo">logo</string>
     <string name="ozme">Ozme</string>
     <string name="ok">OK</string>
+    <string name="glisser_deposer">Utilisez le glisser-déposer pour déplacer vos photos</string>
 
 </resources>

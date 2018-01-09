@@ -3,7 +3,9 @@ package com.ozme;
 /**
  * Created by jpec on 12/11/17.
  */
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +14,10 @@ import android.widget.Gallery;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ViewSwitcher;
+
+import java.util.ArrayList;
 
 public class CustomAdapter extends BaseAdapter {
     Context context;
@@ -21,19 +26,24 @@ public class CustomAdapter extends BaseAdapter {
     TextView name_age;
     TextView desc;
     TextView time;
-    int[] imgs;
-    int index=0;
+    ArrayList<Integer> m_imgArray;
+    ArrayList<String> m_name_ageArray;
+    ArrayList<String> m_descArray;
+    ArrayList<String> m_timeArray;
 
-    public CustomAdapter(Context applicationContext, int[] imgResources, String[] name_age, String [] desc, int[] time) {
+    public CustomAdapter(Context applicationContext, ArrayList<Integer> imgArray, ArrayList<String> name_ageArray, ArrayList<String> descArray, ArrayList<String> timeArray) {
         this.context = applicationContext;
         inflater = (LayoutInflater.from(applicationContext));
-        this.imgs=imgResources;
+        this.m_imgArray=imgArray;
+        this.m_descArray=descArray;
+        this.m_name_ageArray=name_ageArray;
+        this.m_timeArray=timeArray;
 
 
     }
     @Override
     public int getCount() {
-        return 5;
+        return m_imgArray.size();
     }
     @Override
     public Object getItem(int i) {
@@ -43,6 +53,7 @@ public class CustomAdapter extends BaseAdapter {
     public long getItemId(int i) {
         return 0;
     }
+    @SuppressLint({"ViewHolder", "InflateParams"})
     @Override
     public View getView(final int i, View view, ViewGroup viewGroup) {
         view = inflater.inflate(R.layout.timeline_profile, null); // inflate the layout
@@ -63,14 +74,17 @@ public class CustomAdapter extends BaseAdapter {
                 return myView;
             }
         });
-        sw.setImageResource(imgs[i%4]);
+        sw.setImageResource(m_imgArray.get(i));
+        name_age.setText(m_name_ageArray.get(i));
+        time.setText(m_timeArray.get(i));
+        desc.setText(m_descArray.get(i));
 
         sw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                index=i;
-                index++;
-                sw.setImageResource(imgs[index%5]);
+                Toast.makeText(context, "Hello you", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(context, ProfilePublic.class);
+                context.startActivity(intent);
             }
         });
 

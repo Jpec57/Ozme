@@ -1,12 +1,15 @@
 package com.ozme;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
@@ -24,6 +27,9 @@ public class LoginActivity extends AppCompatActivity {
     //handle connection requests for facebook
     CallbackManager callbackManager;
     LoginButton loginButton;
+    SharedPreferences sharedPreferences;
+    AccessTokenTracker accessTokenTracker;
+    AccessToken accessToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,15 +40,40 @@ public class LoginActivity extends AppCompatActivity {
         Uri uri = Uri.parse("android.resource://"+getPackageName()+"/"+R.raw.accueil);
         videoview.setVideoURI(uri);
         videoview.start();
-
         //End
 
 
+        //Facebook login
+
+        //First, we have to check if the user isn't currently sign in
+        accessTokenTracker = new AccessTokenTracker() {
+            @Override
+            protected void onCurrentAccessTokenChanged(
+                    AccessToken oldAccessToken,
+                    AccessToken currentAccessToken) {
+                // Set the access token using
+                // currentAccessToken when it's loaded or set.
+                if (currentAccessToken != null){
+                    Intent intent = new Intent(getApplicationContext(), TimelineActivity.class);
+                    startActivity(intent);
+                }
+            }
+        };
+        // If the access token is available already assign it.
+        accessToken = AccessToken.getCurrentAccessToken();
+        boolean loggedIn = AccessToken.getCurrentAccessToken() == null;
+
+        if (!loggedIn){
+            Intent intent = new Intent(getApplicationContext(), TimelineActivity.class);
+            startActivity(intent);
+        }
+
+        //END
+
         callbackManager = CallbackManager.Factory.create();
-
-
         loginButton = (LoginButton) findViewById(R.id.login_button);
         loginButton.setReadPermissions("email");
+        sharedPreferences= getSharedPreferences("user", MODE_PRIVATE);
 
 
         // Callback registration
@@ -73,9 +104,18 @@ public class LoginActivity extends AppCompatActivity {
                 new FacebookCallback<LoginResult>() {
                     @Override
                     public void onSuccess(LoginResult loginResult) {
-                        // loginResult will contain the AccessToken
-                        Intent intent = new Intent(getApplicationContext(), ChallengeChoiceActivity.class);
-                        startActivity(intent);
+                        //Test if it is the first connexion
+                        if (sharedPreferences.getBoolean("first_visit", true)){
+                            // loginResult will contain the AccessToken
+                            Intent intent = new Intent(getApplicationContext(), ChallengeChoiceActivity.class);
+                            startActivity(intent);
+                        }else{
+                            Intent intent = new Intent(getApplicationContext(), TimelineActivity.class);
+                            startActivity(intent);
+                        }
+
+
+
                     }
 
                     @Override
@@ -95,7 +135,12 @@ public class LoginActivity extends AppCompatActivity {
         callbackManager.onActivityResult(requestCode, resultCode, data);
         super.onActivityResult(requestCode, resultCode, data);
     }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        accessTokenTracker.stopTracking();
     }
+}
 
 /*
 DOCS :

@@ -76,7 +76,11 @@ public class ProfilPerso extends AppCompatActivity {
                     startActivity(intent1);
                     break;
                 case R.id.next:
-                    Intent intent2 = new Intent(getApplicationContext(), Main2Activity.class);
+                    //We will not see the first page anymore
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("first_visit", false);
+                    editor.apply();
+                    Intent intent2 = new Intent(getApplicationContext(), TimelineActivity.class);
                     startActivity(intent2);
                     break;
 

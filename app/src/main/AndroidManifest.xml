@@ -46,7 +46,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".Main2Activity">
+        <activity android:name=".TimelineActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
