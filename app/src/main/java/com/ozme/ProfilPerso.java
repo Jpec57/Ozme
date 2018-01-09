@@ -80,7 +80,7 @@ public class ProfilPerso extends AppCompatActivity {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putBoolean("first_visit", false);
                     editor.apply();
-                    Intent intent2 = new Intent(getApplicationContext(), TimelineActivity.class);
+                    Intent intent2 = new Intent(getApplicationContext(), MainTimelineFragment.class);
                     startActivity(intent2);
                     break;
 

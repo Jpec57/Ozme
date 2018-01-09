@@ -34,7 +34,8 @@ public class MainTimelineFragment extends FragmentActivity {
         viewPager=(ViewPager)findViewById(R.id.view_pager);
         timelineSwiperAdapter= new TimelinePagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(timelineSwiperAdapter);
-        viewPager.setCurrentItem(1);
+        viewPager.setCurrentItem(getIntent().getIntExtra("FRAGMENT_ID", 1));
+
 
 
         account=(ImageView)findViewById(R.id.account);

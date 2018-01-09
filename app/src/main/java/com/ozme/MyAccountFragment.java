@@ -5,12 +5,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 /**
@@ -26,6 +27,8 @@ public class MyAccountFragment extends Fragment {
     ImageView settings;
     ImageView add;
     ImageView help;
+    LinearLayout challenge;
+    RelativeLayout background;
 
     static MyAccountFragment init (int val){
         MyAccountFragment myAccountFragment =  new MyAccountFragment();
@@ -44,15 +47,20 @@ public class MyAccountFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        layoutView = inflater.inflate(R.layout.my_account, container,
+        layoutView = inflater.inflate(R.layout.fragment_my_account, container,
                 false);
         settings=(ImageView)layoutView.findViewById(R.id.settings);
         add=(ImageView)layoutView.findViewById(R.id.add);
         help=(ImageView)layoutView.findViewById(R.id.help);
+        challenge=(LinearLayout)layoutView.findViewById(R.id.challenge);
+        background=(RelativeLayout)layoutView.findViewById(R.id.background);
+
         //Setting onClickListener
         settings.setOnClickListener(onClickListener);
         add.setOnClickListener(onClickListener);
         help.setOnClickListener(onClickListener);
+        challenge.setOnClickListener(onClickListener);
+        background.setOnClickListener(onClickListener);
 
         //Adapter for notifications
         MyAccountNotificationAdapter adapter = new MyAccountNotificationAdapter(layoutView.getContext());
@@ -63,8 +71,6 @@ public class MyAccountFragment extends Fragment {
         Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.papa_mariage_enzo);
         roundImage = new RoundImage(bm);
         profile.setImageDrawable(roundImage);
-
-        //Display display = getActivity().getWindowManager().getDefaultDisplay();
         challenge_text=(TextView)layoutView.findViewById(R.id.challenge_text);
         return layoutView;
     }
@@ -77,6 +83,13 @@ public class MyAccountFragment extends Fragment {
                 case R.id.settings:
                     intent = new Intent(layoutView.getContext(),SettingsActivity.class);
                     break;
+                case R.id.challenge:
+                    intent= new Intent(layoutView.getContext(), ChallengeChoiceActivity.class);
+                    break;
+                case R.id.background:
+                    intent= new Intent(layoutView.getContext(), ProfilPerso.class);
+                    break;
+
                 default:
                     intent=null;
                     break;

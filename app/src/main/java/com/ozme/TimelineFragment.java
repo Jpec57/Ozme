@@ -55,32 +55,8 @@ public class TimelineFragment extends Fragment {
                              Bundle savedInstanceState) {
         layoutView = inflater.inflate(R.layout.fragment_timeline, container,
                 false);
-/*
-        //Add ToolBar
-        mTopToolbar = (Toolbar) layoutView.findViewById(R.id.my_toolbar);
-        layoutView.setSupportActionBar(mTopToolbar);
-
-        //Toolbar title
-        //TextView mTitle = (TextView) mTopToolbar.findViewById(R.id.toolbar_title);
-        //mTitle.setText(mTopToolbar.getTitle());
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-
-        account=(ImageView)mTopToolbar.findViewById(R.id.account);
-        account.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent= new Intent(layoutView.getContext(), MyAccount.class);
-                startActivity(intent);
-            }
-        });
-        */
 
         fil_actu=(CardView)layoutView.findViewById(R.id.fil_actu);
-
-
-
-
-
         TimelineFiller();
         recyclerSettings();
         gridSettings();

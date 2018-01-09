@@ -54,7 +54,7 @@ public class LoginActivity extends AppCompatActivity {
                 // Set the access token using
                 // currentAccessToken when it's loaded or set.
                 if (currentAccessToken != null){
-                    Intent intent = new Intent(getApplicationContext(), TimelineActivity.class);
+                    Intent intent = new Intent(getApplicationContext(), MainTimelineFragment.class);
                     startActivity(intent);
                 }
             }
@@ -64,7 +64,7 @@ public class LoginActivity extends AppCompatActivity {
         boolean loggedIn = AccessToken.getCurrentAccessToken() == null;
 
         if (!loggedIn){
-            Intent intent = new Intent(getApplicationContext(), TimelineActivity.class);
+            Intent intent = new Intent(getApplicationContext(), MainTimelineFragment.class);
             startActivity(intent);
         }
 
@@ -110,7 +110,7 @@ public class LoginActivity extends AppCompatActivity {
                             Intent intent = new Intent(getApplicationContext(), ChallengeChoiceActivity.class);
                             startActivity(intent);
                         }else{
-                            Intent intent = new Intent(getApplicationContext(), TimelineActivity.class);
+                            Intent intent = new Intent(getApplicationContext(), MainTimelineFragment.class);
                             startActivity(intent);
                         }
 
