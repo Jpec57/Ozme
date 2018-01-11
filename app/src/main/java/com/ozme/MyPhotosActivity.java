@@ -39,8 +39,17 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import static com.ozme.ChallengeChoiceActivity.accessToken;
 
 /*
 DOCS :
@@ -74,6 +83,7 @@ public class MyPhotosActivity extends AppCompatActivity {
     int[] state={0,0,0,0,0,0};
     int zoneId=0;
     int draggedId=0;
+    JSONObject userInfos;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
@@ -138,9 +148,29 @@ public class MyPhotosActivity extends AppCompatActivity {
         saveToInternalStorage(yourBitmap, "test.jpg", null);
         imgLoader();
         imgDragAndDrop();
+        userInfoQuery();
 
 
 
+    }
+
+
+    private void userInfoQuery(){
+        GraphRequest request = GraphRequest.newMeRequest(
+                AccessToken.getCurrentAccessToken(),
+                new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject object, GraphResponse response) {
+                        // Insert your code here
+                        userInfos=object;
+
+                    }
+                });
+
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "name,birthday,work,email");
+        request.setParameters(parameters);
+        request.executeAsync();
     }
 
 

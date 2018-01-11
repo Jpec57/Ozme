@@ -22,15 +22,19 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.*;
 import com.facebook.login.widget.ProfilePictureView;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class ChallengeChoiceActivity extends AppCompatActivity {
     Context context;
@@ -38,13 +42,17 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
     String beforeChanges;
     String fb_name;
     String birthday;
+    String gender;
     String profile_pic;
+    String work;
     TextView test;
     TextView next;
     ProfilePictureView profilePictureView;
     static String[] forbiddenWords = {"suicider", "veine", "suicide"};
     String forbiddenOne;
     static AccessToken accessToken= AccessToken.getCurrentAccessToken();
+    FirebaseDatabase database;
+    DatabaseReference databaseReference;
 
 
     @Override
@@ -65,6 +73,7 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
                     editor.putString("first_name", fb_name);
                     editor.putString("birthday", birthday);
                     editor.putString("profil_pic", profile_pic);
+                    editor.putString("work", work);
                     editor.apply();
                     Intent intent = new Intent(getApplicationContext(), ProfilPerso.class);
                     startActivity(intent);
@@ -118,13 +127,10 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
 
 
 
+        firstConnection();
 
     }
 
-    public static Bitmap getFacebookProfilePicture(String userID) throws IOException {
-        URL imageURL = new URL("https://graph.facebook.com/" + userID + "/picture");
-        return BitmapFactory.decodeStream(imageURL.openConnection().getInputStream());
-    }
 
     public void getFbInfo(){
         GraphRequest request = GraphRequest.newMeRequest(
@@ -139,7 +145,7 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
                     }
                 });
         Bundle parameters = new Bundle();
-        parameters.putString("fields", "id,first_name,link, birthday");
+        parameters.putString("fields", "id,first_name,birthday,work, gender");
         request.setParameters(parameters);
         request.executeAsync();
 
@@ -154,6 +160,24 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
 
         }
         return true;
+    }
+
+    private void firstConnection(){
+        database= FirebaseDatabase.getInstance();
+        databaseReference=database.getReference("data/users");
+        LoginActivity.Filter newFilter = new LoginActivity.Filter();
+        LoginActivity.Users newUser = new LoginActivity.Users();
+        Profile profile = Profile.getCurrentProfile();
+        ArrayList<Integer> hobbies = new ArrayList<Integer>();
+        hobbies.add(2);
+        hobbies.add(4);
+        newUser.setHobbies(hobbies);
+        newUser.setUsername(profile.getFirstName());
+        newUser.setGender("Masculin");
+        newUser.setDescription("J'en ai plein le cul");
+        newUser.setFilter(newFilter);
+        databaseReference.child(Profile.getCurrentProfile().getId()).setValue(newUser);
+
     }
 
 
@@ -201,6 +225,11 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             profile_pic = jsonObject.getString("id");
             fb_name = jsonObject.getString("first_name");
             birthday = jsonObject.getString("birthday");
+            gender=jsonObject.getString("gender");
+            work=jsonObject.getJSONArray("work").toString();
+            //Toast.makeText(getApplicationContext(), " "+work, Toast.LENGTH_LONG).show();
+
+            //work=jsonObject.getString("work");
 
         } catch (JSONException e) {
             e.printStackTrace();

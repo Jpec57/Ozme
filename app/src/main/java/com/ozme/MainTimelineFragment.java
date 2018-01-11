@@ -24,6 +24,7 @@ http://www.truiton.com/2013/05/android-fragmentpageradapter-example/
 public class MainTimelineFragment extends FragmentActivity {
     ImageView account;
     ImageView message;
+    ImageView ozme;
     ViewPager viewPager;
     TimelinePagerAdapter timelineSwiperAdapter;
 
@@ -52,6 +53,16 @@ public class MainTimelineFragment extends FragmentActivity {
             @Override
             public void onClick(View v) {
                 viewPager.setCurrentItem(2);
+            }
+        });
+
+        ozme=(ImageView)findViewById(R.id.ozme);
+        ozme.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (viewPager.getCurrentItem() != 1){
+                    viewPager.setCurrentItem(1);
+                }
             }
         });
 

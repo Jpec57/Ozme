@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:weightSum="5"
+    android:layout_height="match_parent"
+    android:focusable="true"
+    android:id="@+id/focusFight"
+    android:focusableInTouchMode="true" >
+    <ImageSwitcher
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/profile"
+        android:layout_weight="2"
+        android:src="@drawable/a7x"
+        android:contentDescription="@string/todo" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="10sp"
+        android:layout_marginBottom="50sp"
+        android:focusable="true"
+        android:layout_weight="3">
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:id="@+id/listView"/>
+
+    </LinearLayout>
+
+
+
+
+</LinearLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#696969">
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/ecrire_un_message"
+            android:inputType="textCapSentences"
+            android:id="@+id/messageToSend"
+            android:textColor="#696969"
+            android:background="#ffffff"
+            android:layout_marginTop="5sp"
+            android:layout_marginStart="40sp"
+            android:layout_marginLeft="40sp"
+            android:layout_marginRight="50sp"
+            android:layout_marginEnd="50sp"/>
+        <ImageView
+            android:layout_width="30sp"
+            android:layout_height="30sp"
+            android:id="@+id/send"
+            android:src="@drawable/send_white"
+            android:layout_marginRight="10sp"
+            android:layout_marginEnd="10sp"
+            android:layout_marginTop="5sp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:contentDescription="@string/todo" />
+    </RelativeLayout>
+</RelativeLayout>

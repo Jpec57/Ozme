@@ -29,7 +29,9 @@
                 android:layout_marginLeft="2sp"
                 android:layout_marginStart="2sp"
                 android:layout_marginTop="2sp"
-                android:src="@drawable/logo_notif"/>
+                android:id="@+id/ozme"
+                android:src="@drawable/logo_notif"
+                android:contentDescription="@string/todo" />
         </RelativeLayout>
         <RelativeLayout
             android:layout_width="35sp"

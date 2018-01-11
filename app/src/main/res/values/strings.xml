@@ -13,11 +13,13 @@
     </string-array>
 
     <!-- Facebook login -->
-    <string name="facebook_app_id">2489367707955963</string>
-    <string name="fb_login_protocol_scheme">fb2489367707955963</string>
+    <string name="facebook_app_id">359402504395500</string>
+    <string name="fb_login_protocol_scheme">fb359402504395500</string>
     <string name="logo">logo</string>
     <string name="ozme">Ozme</string>
     <string name="ok">OK</string>
     <string name="glisser_deposer">Utilisez le glisser-déposer pour déplacer vos photos</string>
+    <string name="mon_profil">Mon profil</string>
+    <string name="ecrire_un_message">Ecrire un message</string>
 
 </resources>

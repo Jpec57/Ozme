@@ -15,7 +15,13 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.login.widget.ProfilePictureView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Arrays;
 import java.util.List;
@@ -90,6 +96,29 @@ public class ProfilPerso extends AppCompatActivity {
         }
     };
 
+    private void userInfoQuery(){
+        GraphRequest request = GraphRequest.newMeRequest(
+                AccessToken.getCurrentAccessToken(),
+                new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject object, GraphResponse response) {
+                        // Insert your code here
+                        try {
+                            object.getString("birthday");
+                            object.getString("work");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "name,birthday,work,email");
+        request.setParameters(parameters);
+        request.executeAsync();
+    }
+
     private void activityRecycler(){
         RecyclerView recycler = (RecyclerView)findViewById(R.id.recycler);
         // use this setting to
@@ -148,7 +177,8 @@ public class ProfilPerso extends AppCompatActivity {
 
     private void bubbleSettings(){
         //Challenge bubble-Settings
-        challenge_text.setText(" "+sharedPreferences.getString("challenge", "me faire des lasagnes"));
+        String challenge = " "+sharedPreferences.getString("challenge", "me faire des lasagnes");
+        challenge_text.setText(challenge);
         challenge_text.setOnClickListener(onClickListener);
         String name_age = sharedPreferences.getString("first_name", "Julie");
         name_age=name_age+", "+sharedPreferences.getString("birthday", "28");

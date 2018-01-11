@@ -5,6 +5,20 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
+import android.widget.Toast;
+
+import com.facebook.Profile;
+import com.firebase.ui.database.FirebaseListAdapter;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by jpec on 09/01/18.
@@ -12,6 +26,11 @@ import android.view.ViewGroup;
 
 public class MessageFragment extends Fragment {
     int fragVal;
+    ListView listView;
+    FirebaseDatabase database;
+    DatabaseReference databaseReference;
+    List<Long> conversationIds;
+
 
     static MessageFragment init (int val){
         MessageFragment messageFragment =  new MessageFragment();
@@ -30,8 +49,35 @@ public class MessageFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View layoutView = inflater.inflate(R.layout.fragment_message, container,
+        final View layoutView = inflater.inflate(R.layout.fragment_message, container,
                 false);
+        listView=(ListView)layoutView.findViewById(R.id.listView);
+        database= FirebaseDatabase.getInstance();
+        databaseReference=database.getReference("data/users/"+ Profile.getCurrentProfile().getId()+"/messagers");
+
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                GenericTypeIndicator<List<Long>> genericTypeIndicator = new GenericTypeIndicator<List<Long>>() {};
+                conversationIds=dataSnapshot.getValue(genericTypeIndicator);
+                listView.setAdapter(new MessageViewAdapter(layoutView.getContext(), conversationIds));
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        /*
+        FirebaseListAdapter<Integer> conversationAdapter = new FirebaseListAdapter<Integer>(getContext(), Integer.class, R.layout.fragment_message, "users/"+ Profile.getCurrentProfile().getId()+"/messagers" ) {
+            @Override
+            protected void populateView(View v, Integer model, int position) {
+                DatabaseReference othersId = database.getReference("users/"+model);
+            }
+        };*/
+
+
         //TextView tv = (TextView)layoutView.findViewById(R.id.text);
         return layoutView;
     }
