@@ -20,6 +20,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 /**
  * Created by jpec on 11/01/18.
  */
@@ -27,6 +29,9 @@ import java.util.List;
 public class MessageViewAdapter extends BaseAdapter {
     LayoutInflater inflater;
     List<Long> conversationIds;
+    static class ViewHolder {
+        CircleImageView imageView;
+    }
 
     public MessageViewAdapter(Context c, List<Long> conversationIds){
         inflater = (LayoutInflater.from(c));
@@ -48,10 +53,12 @@ public class MessageViewAdapter extends BaseAdapter {
         return 0;
     }
 
-    @SuppressLint({"ViewHolder", "InflateParams"})
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
+        ViewHolder holder = new ViewHolder();
         convertView = inflater.inflate(R.layout.message_view, null);
+        holder.imageView = (CircleImageView)convertView.findViewById(R.id.circleProfile);
+        //holder.imageView.setImageResource();
 
         final View finalConvertView = convertView;
         convertView.setOnClickListener(new View.OnClickListener() {

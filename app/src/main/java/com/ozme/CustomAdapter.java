@@ -30,14 +30,16 @@ public class CustomAdapter extends BaseAdapter {
     ArrayList<String> m_name_ageArray;
     ArrayList<String> m_descArray;
     ArrayList<String> m_timeArray;
+    ArrayList<Long> m_profilesId;
 
-    public CustomAdapter(Context applicationContext, ArrayList<Integer> imgArray, ArrayList<String> name_ageArray, ArrayList<String> descArray, ArrayList<String> timeArray) {
+    public CustomAdapter(Context applicationContext, ArrayList<Integer> imgArray, ArrayList<String> name_ageArray, ArrayList<String> descArray, ArrayList<String> timeArray, ArrayList<Long> profilesId) {
         this.context = applicationContext;
         inflater = (LayoutInflater.from(applicationContext));
         this.m_imgArray=imgArray;
         this.m_descArray=descArray;
         this.m_name_ageArray=name_ageArray;
         this.m_timeArray=timeArray;
+        this.m_profilesId=profilesId;
 
 
     }
@@ -84,6 +86,7 @@ public class CustomAdapter extends BaseAdapter {
             public void onClick(View v) {
                 Toast.makeText(context, "Hello you", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(context, ProfilePublic.class);
+                intent.putExtra("id", m_profilesId.get(i));
                 context.startActivity(intent);
             }
         });

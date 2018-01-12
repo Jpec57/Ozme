@@ -1,5 +1,6 @@
 package com.ozme;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Display;
@@ -9,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -20,6 +22,7 @@ public class ProfilePublic extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.profile_public);
+
         RelativeLayout helpMe=(RelativeLayout)findViewById(R.id.helpme);
         ImageView imageView=(ImageView)findViewById(R.id.imghelp);
         Display display = getWindowManager().getDefaultDisplay();
@@ -27,6 +30,16 @@ public class ProfilePublic extends AppCompatActivity {
         RelativeLayout.LayoutParams help = new RelativeLayout.LayoutParams(display.getWidth(), display.getHeight()*2/5);
         helpMe.setLayoutParams(help);
         imageView.setLayoutParams(img);
+
+        Intent intent= getIntent();
+        long id = intent.getLongExtra("id", 0);
+        if (id ==0){
+            Toast.makeText(getApplicationContext(), "Problem", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(this, " "+id, Toast.LENGTH_SHORT).show();
+            //imageView.setImageURI();
+        }
+
         setThink();
     }
 

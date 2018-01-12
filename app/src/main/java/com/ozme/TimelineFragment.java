@@ -32,6 +32,7 @@ public class TimelineFragment extends Fragment {
     ArrayList<String> descTimeline= new ArrayList<>();
     ArrayList<String> name_ageTimeline= new ArrayList<>();
     ArrayList<String> timeTimeline = new ArrayList<>();
+    ArrayList<Long> profilesId =  new ArrayList<>();
     CardView fil_actu;
     View layoutView;
     int currentTimestamp;
@@ -64,7 +65,7 @@ public class TimelineFragment extends Fragment {
     }
     private void gridSettings(){
         simpleGrid = (GridView) layoutView.findViewById(R.id.grid);
-        CustomAdapter customAdapter = new CustomAdapter(layoutView.getContext(), imgTimeline, name_ageTimeline, descTimeline, timeTimeline);
+        CustomAdapter customAdapter = new CustomAdapter(layoutView.getContext(), imgTimeline, name_ageTimeline, descTimeline, timeTimeline, profilesId);
         simpleGrid.setAdapter(customAdapter);
         simpleGrid.setSmoothScrollbarEnabled(true);
         simpleGrid.setFastScrollEnabled(true);
@@ -149,6 +150,11 @@ public class TimelineFragment extends Fragment {
             name_ageTimeline.add("Jean-Paul, 21");
             name_ageTimeline.add("Aline, 18");
             name_ageTimeline.add("Maxime, 28");
+
+            profilesId.add((long) 1151181962);
+            profilesId.add(269506396723510L);
+            profilesId.add(1122624547763740L);
+
 
 
         }

@@ -9,47 +9,43 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.provider.MediaStore;
-import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.DragEvent;
-import android.view.MotionEvent;
 import android.view.View;
 
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
-import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
-import com.facebook.HttpMethod;
+import com.facebook.Profile;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
-
-import static com.ozme.ChallengeChoiceActivity.accessToken;
 
 /*
 DOCS :
@@ -84,8 +80,11 @@ public class MyPhotosActivity extends AppCompatActivity {
     int zoneId=0;
     int draggedId=0;
     JSONObject userInfos;
+    DatabaseReference databaseReference;
+    FirebaseDatabase database;
+    UsersInfo.Users user;
+    List<String> photos;
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -136,19 +135,36 @@ public class MyPhotosActivity extends AppCompatActivity {
         addDelete.add(add_delete4);
         addDelete.add(add_delete5);
         addDelete.add(add_delete6);
-
-
         layout1 = (RelativeLayout)findViewById(R.id.layout1);
 
+        database= FirebaseDatabase.getInstance();
+        databaseReference=database.getReference("data/users/"+ Profile.getCurrentProfile().getId());
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                user= dataSnapshot.getValue(UsersInfo.Users.class);
+                //We save it to firebase
+                imgLoader();
+                user.setPhotos(photos);
+                databaseReference.setValue(user);
 
+            }
 
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
         //Test for big image
         Bitmap yourBitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.papa_mariage_enzo);
-         //Profile pic
+        //Profile pic
         saveToInternalStorage(yourBitmap, "test.jpg", null);
         imgLoader();
         imgDragAndDrop();
         userInfoQuery();
+
+
+
 
 
 
@@ -175,6 +191,7 @@ public class MyPhotosActivity extends AppCompatActivity {
 
 
     private void imgLoader() {
+        photos= new ArrayList<String>();
         for (int k = 0; k < imgsArray.size(); k++) {
             try {
                 //Same path as saveInternal
@@ -189,6 +206,7 @@ public class MyPhotosActivity extends AppCompatActivity {
                     view.setImageBitmap(b);
                     //There is something
                     state[k]=1;
+                    photos.add(getEncoded64ImageStringFromBitmap(b));
                     addDelete.get(k).setImageDrawable(getResources().getDrawable(R.drawable.photo_delete));
                 }else{
                     //There isn't
@@ -199,6 +217,7 @@ public class MyPhotosActivity extends AppCompatActivity {
                 //No img --> cannot load
             }
         }
+
 
 
     }
@@ -507,6 +526,14 @@ public class MyPhotosActivity extends AppCompatActivity {
             super.onPostExecute(result);
 
         }
+    }
+//TODO register in online database all of the changes
+    public String getEncoded64ImageStringFromBitmap(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream);
+        byte[] byteFormat = stream.toByteArray();
+        // get the base 64 string
+        return Base64.encodeToString(byteFormat, Base64.NO_WRAP);
     }
 
 

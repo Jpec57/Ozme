@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
@@ -32,6 +33,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -75,6 +77,10 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
                     editor.putString("profil_pic", profile_pic);
                     editor.putString("work", work);
                     editor.apply();
+                    //Initialize user
+                    if (sharedPreferences.getBoolean("first_visit", true)){
+                        firstConnection();
+                    }
                     Intent intent = new Intent(getApplicationContext(), ProfilPerso.class);
                     startActivity(intent);
                 }else{
@@ -124,11 +130,6 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             }
         });
 
-
-
-
-        firstConnection();
-
     }
 
 
@@ -165,17 +166,19 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
     private void firstConnection(){
         database= FirebaseDatabase.getInstance();
         databaseReference=database.getReference("data/users");
-        LoginActivity.Filter newFilter = new LoginActivity.Filter();
-        LoginActivity.Users newUser = new LoginActivity.Users();
+        UsersInfo.Filter newFilter = new UsersInfo.Filter();
+        UsersInfo.Users newUser = new UsersInfo.Users();
         Profile profile = Profile.getCurrentProfile();
         ArrayList<Integer> hobbies = new ArrayList<Integer>();
         hobbies.add(2);
         hobbies.add(4);
         newUser.setHobbies(hobbies);
         newUser.setUsername(profile.getFirstName());
-        newUser.setGender("Masculin");
+        newUser.setGender(gender);
+        newUser.setJob(work);
         newUser.setDescription("J'en ai plein le cul");
         newUser.setFilter(newFilter);
+
         databaseReference.child(Profile.getCurrentProfile().getId()).setValue(newUser);
 
     }
@@ -202,8 +205,6 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
         test.setTextSize(18);
         RelativeLayout ose=(RelativeLayout)findViewById(R.id.ose);
         RelativeLayout.LayoutParams layoutToBeCentered = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        //layoutToBeCentered.addRule(RelativeLayout.CENTER_IN_PARENT);
-        //layoutToBeCentered.addRule(RelativeLayout.RIGHT_OF, R.id.ose_logo);
         layoutToBeCentered.addRule(RelativeLayout.BELOW,R.id.ose_logo);
         layoutToBeCentered.addRule(RelativeLayout.CENTER_HORIZONTAL);
         ose.setLayoutParams(layoutToBeCentered);
@@ -227,13 +228,18 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             birthday = jsonObject.getString("birthday");
             gender=jsonObject.getString("gender");
             work=jsonObject.getJSONArray("work").toString();
-            //Toast.makeText(getApplicationContext(), " "+work, Toast.LENGTH_LONG).show();
-
-            //work=jsonObject.getString("work");
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getEncoded64ImageStringFromBitmap(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream);
+        byte[] byteFormat = stream.toByteArray();
+        // get the base 64 string
+        return Base64.encodeToString(byteFormat, Base64.NO_WRAP);
     }
 
 

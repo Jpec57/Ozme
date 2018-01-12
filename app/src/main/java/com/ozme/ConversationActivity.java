@@ -2,10 +2,14 @@ package com.ozme;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
@@ -29,6 +33,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
@@ -38,6 +43,7 @@ import org.json.JSONObject;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -57,7 +63,10 @@ public class ConversationActivity extends AppCompatActivity {
     Timer timer;
     Date date;
     boolean a;
+    long id;
     LinearLayout focusFight;
+    List<String> photos;
+    int photosIndex=0;
 
 
     @Override
@@ -67,7 +76,8 @@ public class ConversationActivity extends AppCompatActivity {
 
         Intent intent= getIntent();
         database= FirebaseDatabase.getInstance();
-        getConversation(intent.getLongExtra("conversationId", 0));
+        id=intent.getLongExtra("conversationId", 0);
+        getConversation(id);
 
         setPicture();
         setTimerForPic();
@@ -129,19 +139,15 @@ public class ConversationActivity extends AppCompatActivity {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                a=!a;
-                if (a){
+                photosIndex++;
+                if (photos != null) {
+                    if (photosIndex >= photos.size()) {
+                        photosIndex = 0;
+                    }
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            profilePictureView.setImageResource(R.drawable.goku_training);
-                        }
-                    });
-                }else{
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            profilePictureView.setImageResource(R.drawable.a7x);
+                            profilePictureView.setImageDrawable(decodeFromBase64ToDrawable(photos.get(photosIndex)));
                         }
                     });
                 }
@@ -166,7 +172,39 @@ public class ConversationActivity extends AppCompatActivity {
         Animation out = AnimationUtils.loadAnimation(this,android.R.anim.slide_out_right);
         profilePictureView.setInAnimation(in);
         profilePictureView.setOutAnimation(out);
-        profilePictureView.setImageResource(R.drawable.a7x);
+
+        //Get img from firebase
+        DatabaseReference databaseReference1=database.getReference("data/users/"+id+"/photos");
+        databaseReference1.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                GenericTypeIndicator<List<String>> photosType = new GenericTypeIndicator<List<String>>(){};
+                photos= dataSnapshot.getValue(photosType);
+
+                if (photos != null) {
+                    profilePictureView.setImageDrawable(decodeFromBase64ToDrawable(photos.get(photosIndex)));
+                }else{
+                    profilePictureView.setImageResource(R.drawable.logo_bright_white);
+                    Toast.makeText(ConversationActivity.this, "Empty", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+
+
+    }
+    private Drawable decodeFromBase64ToDrawable(String encodedImage)
+    {
+        byte[] decodedString = Base64.decode(encodedImage, Base64.DEFAULT);
+        return new BitmapDrawable(getResources(), BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
     }
 
 
