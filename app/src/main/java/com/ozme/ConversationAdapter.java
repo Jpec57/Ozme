@@ -2,6 +2,10 @@ package com.ozme;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,12 +30,13 @@ public class ConversationAdapter extends BaseAdapter {
     LayoutInflater inflater;
     ArrayList<ConversationActivity.Message> m_conversationMessage;
     CircleImageView circleProfile;
+    Drawable drawable;
 
-    public ConversationAdapter(Context applicationContext, ArrayList<ConversationActivity.Message> conversationMessage){
+    public ConversationAdapter(Context applicationContext, ArrayList<ConversationActivity.Message> conversationMessage, Drawable circlePhoto){
         this.m_context = applicationContext;
         this.m_conversationMessage=conversationMessage;
         inflater = (LayoutInflater.from(applicationContext));
-        //TODO get the img from the "stranger" here
+        this.drawable=circlePhoto;
     }
     @Override
     public int getCount() {
@@ -60,10 +65,11 @@ public class ConversationAdapter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.conversation_sender, null); // inflate the layout
             //Have to set the circleImageView
             circleProfile= (CircleImageView)convertView.findViewById(R.id.circleProfile);
-            circleProfile.setImageResource(R.drawable.goku_training);
+            circleProfile.setImageDrawable(drawable);
         }
         TextView messageText = (TextView) convertView.findViewById(R.id.text);
         messageText.setText(message.getText());
         return convertView;
     }
+
 }

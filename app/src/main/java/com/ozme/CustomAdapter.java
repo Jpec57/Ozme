@@ -84,7 +84,6 @@ public class CustomAdapter extends BaseAdapter {
         sw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(context, "Hello you", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(context, ProfilePublic.class);
                 intent.putExtra("id", m_profilesId.get(i));
                 context.startActivity(intent);

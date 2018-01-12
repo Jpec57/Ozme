@@ -66,6 +66,7 @@ public class ConversationActivity extends AppCompatActivity {
     long id;
     LinearLayout focusFight;
     List<String> photos;
+    String circlePhoto;
     int photosIndex=0;
 
 
@@ -77,6 +78,7 @@ public class ConversationActivity extends AppCompatActivity {
         Intent intent= getIntent();
         database= FirebaseDatabase.getInstance();
         id=intent.getLongExtra("conversationId", 0);
+        circlePhoto=intent.getStringExtra("circlePhoto");
         getConversation(id);
 
         setPicture();
@@ -225,7 +227,7 @@ public class ConversationActivity extends AppCompatActivity {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Message message = dataSnapshot.getValue(Message.class);
                 conversationMessage.add(message);
-                listView.setAdapter(new ConversationAdapter(getApplicationContext(), conversationMessage));
+                listView.setAdapter(new ConversationAdapter(getApplicationContext(), conversationMessage, decodeFromBase64ToDrawable(circlePhoto)));
 
             }
 
@@ -253,6 +255,7 @@ public class ConversationActivity extends AppCompatActivity {
 
 
     }
+
 
     public void getFbInfo(){
         GraphRequest request = GraphRequest.newMeRequest(

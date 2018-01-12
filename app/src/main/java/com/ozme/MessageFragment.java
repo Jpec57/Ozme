@@ -69,16 +69,7 @@ public class MessageFragment extends Fragment {
 
             }
         });
-        /*
-        FirebaseListAdapter<Integer> conversationAdapter = new FirebaseListAdapter<Integer>(getContext(), Integer.class, R.layout.fragment_message, "users/"+ Profile.getCurrentProfile().getId()+"/messagers" ) {
-            @Override
-            protected void populateView(View v, Integer model, int position) {
-                DatabaseReference othersId = database.getReference("users/"+model);
-            }
-        };*/
 
-
-        //TextView tv = (TextView)layoutView.findViewById(R.id.text);
         return layoutView;
     }
 }
