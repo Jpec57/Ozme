@@ -114,7 +114,41 @@ public class MessageViewAdapter extends BaseAdapter {
         }else{
             lastQuery=database.getReference("data/conversations/"+conversationIds.get(position)+"/"+persoId).limitToLast(1);
         }
+        lastQuery.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                    ConversationActivity.Message message = dataSnapshot.getValue(ConversationActivity.Message.class);
+                    if (message != null) {
+                        holder.desc.setText(message.getText());
+                    } else {
+                        holder.desc.setText("Error");
+                    }
+                    holder.date.setText(new Date(Long.parseLong(dataSnapshot.getKey())).toString());
+                    return;
 
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+/*
         lastQuery.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -137,7 +171,7 @@ public class MessageViewAdapter extends BaseAdapter {
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });
+        });*/
 
 
 
