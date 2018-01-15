@@ -10,8 +10,10 @@ import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
@@ -28,6 +30,8 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.Profile;
 import com.facebook.login.widget.ProfilePictureView;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -68,6 +72,8 @@ public class ConversationActivity extends AppCompatActivity {
     List<String> photos;
     String circlePhoto;
     int photosIndex=0;
+    LinearLayout listViewContainer;
+
 
 
     @Override
@@ -85,6 +91,9 @@ public class ConversationActivity extends AppCompatActivity {
         setTimerForPic();
         setFocusFight();
 
+        listViewContainer=(LinearLayout)findViewById(R.id.listViewContainer);
+
+
         //Detect when EditText is focused to hide the img
         editText=(EditText)findViewById(R.id.messageToSend);
         editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -93,7 +102,10 @@ public class ConversationActivity extends AppCompatActivity {
                 listView.smoothScrollBy(0,400);
                 if (hasFocus){
                     profilePictureView.setVisibility(View.GONE);
-                    listView.smoothScrollToPosition(listView.getLastVisiblePosition());
+                    listView.setSelection(listView.getAdapter().getCount() - 1);
+                    LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                    layoutParams.setMargins(0,0,0,200);
+                    listViewContainer.setLayoutParams(layoutParams);
                 }else{
                     profilePictureView.setVisibility(View.VISIBLE);
                     InputMethodManager imanager = (InputMethodManager) getApplicationContext()
@@ -227,8 +239,17 @@ public class ConversationActivity extends AppCompatActivity {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Message message = dataSnapshot.getValue(Message.class);
                 conversationMessage.add(message);
-                listView.setAdapter(new ConversationAdapter(getApplicationContext(), conversationMessage, decodeFromBase64ToDrawable(circlePhoto)));
+                    //We get rid of the notif icon if the user has read the message sent by the sender
+                    Message lastMessage= conversationMessage.get(conversationMessage.size()-1);
 
+                    if ( lastMessage.getSender() != Long.parseLong(Profile.getCurrentProfile().getId()) && !lastMessage.isRead() ){
+                            lastMessage.setRead(true);
+                            databaseReference.child(dataSnapshot.getKey()).setValue(lastMessage);
+                    }
+
+                    ConversationAdapter conversationAdapter = new ConversationAdapter(getApplicationContext(), conversationMessage, decodeFromBase64ToDrawable(circlePhoto));
+                listView.setAdapter(conversationAdapter);
+                scrollMyListViewToBottom(conversationAdapter);
             }
 
             @Override
@@ -252,8 +273,16 @@ public class ConversationActivity extends AppCompatActivity {
             }
         });
 
+    }
 
-
+    private void scrollMyListViewToBottom(final ConversationAdapter conversationAdapter) {
+        listView.post(new Runnable() {
+            @Override
+            public void run() {
+                // Select the last row so it will scroll into view...
+                listView.setSelection(conversationAdapter.getCount() - 1);
+            }
+        });
     }
 
 

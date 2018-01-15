@@ -14,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 /*
@@ -36,8 +37,6 @@ public class MainTimelineFragment extends FragmentActivity {
         timelineSwiperAdapter= new TimelinePagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(timelineSwiperAdapter);
         viewPager.setCurrentItem(getIntent().getIntExtra("FRAGMENT_ID", 1));
-
-
 
         account=(ImageView)findViewById(R.id.account);
         account.setOnClickListener(new View.OnClickListener() {

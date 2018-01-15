@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -120,6 +121,16 @@ public class MessageViewAdapter extends BaseAdapter {
                     ConversationActivity.Message message = dataSnapshot.getValue(ConversationActivity.Message.class);
                     if (message != null) {
                         holder.desc.setText(message.getText());
+                        //Test if the message has been already read
+                        //Is it the receiver's message ? If no, continue
+                        if (message.getSender() != Long.parseLong(Profile.getCurrentProfile().getId())){
+                            //What is the current status ? If not read, show the "pastille rose"
+                            if (!message.isRead()){
+                                holder.notif.setVisibility(View.VISIBLE);
+                            }else{
+                                holder.notif.setVisibility(View.INVISIBLE);
+                            }
+                        }
                     } else {
                         holder.desc.setText("Error");
                     }
@@ -130,7 +141,10 @@ public class MessageViewAdapter extends BaseAdapter {
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
+                ConversationActivity.Message message = dataSnapshot.getValue(ConversationActivity.Message.class);
+                if (message != null && message.isRead()) {
+                    holder.notif.setVisibility(View.INVISIBLE);
+                }
             }
 
             @Override

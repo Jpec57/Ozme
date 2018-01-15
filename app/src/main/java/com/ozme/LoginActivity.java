@@ -127,11 +127,6 @@ public class LoginActivity extends AppCompatActivity {
                             Intent intent = new Intent(getApplicationContext(), MainTimelineFragment.class);
                             startActivity(intent);
                         }
-
-
-
-
-
                     }
 
                     @Override

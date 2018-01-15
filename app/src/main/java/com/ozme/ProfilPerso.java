@@ -11,18 +11,27 @@ import android.view.Display;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.facebook.Profile;
 import com.facebook.login.widget.ProfilePictureView;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,6 +47,8 @@ public class ProfilPerso extends AppCompatActivity {
     SharedPreferences sharedPreferences;
     SharedPreferences sharedPreferences2;
     Display display;
+    FirebaseDatabase database;
+    DatabaseReference databaseReference;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -50,6 +61,8 @@ public class ProfilPerso extends AppCompatActivity {
         sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
         sharedPreferences2=getSharedPreferences("activities", MODE_PRIVATE);
         challenge_text=(TextView)findViewById(R.id.challenge_text);
+        LinearLayout challenge=(LinearLayout)findViewById(R.id.challenge);
+        challenge.setOnClickListener(onClickListener);
         fb_name_age=(TextView)findViewById(R.id.fb_name_age);
         next=(Button)findViewById(R.id.next);
         next.setOnClickListener(onClickListener);
@@ -88,6 +101,11 @@ public class ProfilPerso extends AppCompatActivity {
                     editor.apply();
                     Intent intent2 = new Intent(getApplicationContext(), MainTimelineFragment.class);
                     startActivity(intent2);
+                    break;
+
+                case R.id.challenge:
+                    Intent intent3= new Intent(getApplicationContext(), ChallengeChoiceActivity.class);
+                    startActivity(intent3);
                     break;
 
                 default:
@@ -132,9 +150,40 @@ public class ProfilPerso extends AppCompatActivity {
         int[] id = {R.drawable.travel, R.drawable.a7x, R.drawable.papa_mariage_enzo, R.drawable.gourmandise, R.drawable.travel, R.drawable.a7x};
         //Construction of the array shades
         boolean[] shades = {true, false, false, true, true, true};
+        database= FirebaseDatabase.getInstance();
+        databaseReference=database.getReference("data/users");
         for (int k=0; k<desc.size(); k++){
             shades[k]=sharedPreferences2.getBoolean(k+"", true);
         }
+        final List<Integer> hobby = new ArrayList<>();
+        for (boolean shade : shades) {
+            if (shade) {
+                hobby.add(shade ? 1 : 0);
+            }
+        }
+        //TODO
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Toast.makeText(getApplicationContext(), dataSnapshot.getValue().toString(), Toast.LENGTH_SHORT).show();
+                UsersInfo.Users users=dataSnapshot.child(Profile.getCurrentProfile().getId()).getValue(UsersInfo.Users.class);
+                try{
+                    users.setHobbies(hobby);
+                    databaseReference.child(Profile.getCurrentProfile().getId()).setValue(users);
+                }catch (Exception e){
+                    Toast.makeText(getApplicationContext(), "Error", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+
         recycler.setAdapter(new ProfileWhatILikeAdapter(this, desc, id, shades));
     }
 

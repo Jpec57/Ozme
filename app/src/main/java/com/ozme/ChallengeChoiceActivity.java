@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -14,6 +16,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Base64;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
@@ -27,9 +30,14 @@ import android.widget.Toast;
 
 import com.facebook.*;
 import com.facebook.login.widget.ProfilePictureView;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -37,6 +45,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class ChallengeChoiceActivity extends AppCompatActivity {
     Context context;
@@ -55,6 +65,8 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
     static AccessToken accessToken= AccessToken.getCurrentAccessToken();
     FirebaseDatabase database;
     DatabaseReference databaseReference;
+    JSONArray age_range;
+    SharedPreferences sharedPreferences;
 
 
     @Override
@@ -69,7 +81,7 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (checkForForbiddenWords()){
-                    SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
+                    sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString("challenge", editText.getText().toString());
                     editor.putString("first_name", fb_name);
@@ -78,11 +90,7 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
                     editor.putString("work", work);
                     editor.apply();
                     //Initialize user
-                    if (sharedPreferences.getBoolean("first_visit", true)){
-                        firstConnection();
-                    }
-                    Intent intent = new Intent(getApplicationContext(), ProfilPerso.class);
-                    startActivity(intent);
+                    firstConnection(sharedPreferences.getBoolean("first_visit", true));
                 }else{
                     //Modal present to inform the user
                     // 1. Instantiate an AlertDialog.Builder with its constructor
@@ -96,9 +104,6 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
                                     dialog.dismiss();
                                 }
                             });
-
-
-
                     // 3. Get the AlertDialog from create()
                     AlertDialog dialog = builder.create();
                     dialog.show();
@@ -146,13 +151,16 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
                     }
                 });
         Bundle parameters = new Bundle();
-        parameters.putString("fields", "id,first_name,birthday,work, gender");
+        parameters.putString("fields", "id,first_name,birthday,work, gender,age_range");
         request.setParameters(parameters);
         request.executeAsync();
 
     }
 
     private boolean checkForForbiddenWords(){
+        if (test.getText().toString().equals("")){
+            return false;
+        }
         for (String forbiddenWord : forbiddenWords) {
             if (test.getText().toString().toLowerCase().contains(forbiddenWord)) {
                 forbiddenOne=forbiddenWord;
@@ -163,30 +171,9 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
         return true;
     }
 
-    private void firstConnection(){
-        database= FirebaseDatabase.getInstance();
-        databaseReference=database.getReference("data/users");
-        UsersInfo.Filter newFilter = new UsersInfo.Filter();
-        UsersInfo.Users newUser = new UsersInfo.Users();
-        Profile profile = Profile.getCurrentProfile();
-        ArrayList<Integer> hobbies = new ArrayList<Integer>();
-        hobbies.add(2);
-        hobbies.add(4);
-        newUser.setHobbies(hobbies);
-        newUser.setUsername(profile.getFirstName());
-        newUser.setGender(gender);
-        newUser.setJob(work);
-        newUser.setDescription("J'en ai plein le cul");
-        newUser.setFilter(newFilter);
-
-        databaseReference.child(Profile.getCurrentProfile().getId()).setValue(newUser);
-
-    }
 
 
     private void setProfileToView(JSONObject jsonObject) {
-        //facebookName.setText(jsonObject.getString("name"));
-
         //We adapt to the device's width and height
         Display display = getWindowManager().getDefaultDisplay();
         //We must use the LayoutParams coming from the parent layout (ie a relative layout here)
@@ -200,7 +187,6 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
         newParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
         newParams.setMargins(0,0,0,-2);
         pink.setLayoutParams(newParams);
-
         test.setText("trouver un bon défi");
         test.setTextSize(18);
         RelativeLayout ose=(RelativeLayout)findViewById(R.id.ose);
@@ -216,9 +202,9 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
         test.setShadowLayer(2, 1, 1, Color.BLACK);
         try{
             profilePictureView.setProfileId(jsonObject.getString("id"));
-
         }catch (Exception e){
-
+            Intent intent=new Intent(this, ChallengeChoiceActivity.class);
+            startActivity(intent);
         }
 
         //Get the user's name
@@ -227,20 +213,98 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             fb_name = jsonObject.getString("first_name");
             birthday = jsonObject.getString("birthday");
             gender=jsonObject.getString("gender");
-            work=jsonObject.getJSONArray("work").toString();
+            age_range = jsonObject.getJSONArray("age_range");
+
+            //AgeAuthToKeepGoing();
+
+            try{
+                work=jsonObject.getJSONArray("work").toString();
+
+
+
+            }catch (Exception e){
+                Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+
+            }
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    public String getEncoded64ImageStringFromBitmap(Bitmap bitmap) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream);
-        byte[] byteFormat = stream.toByteArray();
-        // get the base 64 string
-        return Base64.encodeToString(byteFormat, Base64.NO_WRAP);
+    private void AgeAuthToKeepGoing(int age){
+        if (age<18){
+            Intent intent = new Intent(this, LoginActivity.class);
+            Profile.setCurrentProfile(null);
+            startActivity(intent);
+        }
     }
 
+    private void firstConnection(boolean isFirstConnection){
+        database= FirebaseDatabase.getInstance();
+        databaseReference=database.getReference("data/users/"+Profile.getCurrentProfile().getId());
+        if (isFirstConnection){
+            UsersInfo.Users newUser = new UsersInfo.Users();
+            UsersInfo.Filter newFilter = new UsersInfo.Filter();
+            Profile profile = Profile.getCurrentProfile();
+            ArrayList<Integer> hobbies = new ArrayList<Integer>();
+            hobbies.add(2);
+            hobbies.add(4);
+            newUser.setHobbies(hobbies);
+            newUser.setUsername(profile.getFirstName());
+            newUser.setGender(gender);
+            newUser.setJob(work);
+            newUser.setChallengeTitle(test.getText().toString());
+            newUser.setFilter(newFilter);
+            databaseReference.setValue(newUser);
+        }else{
+            databaseReference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    try{
+                        UsersInfo.Users users=dataSnapshot.getValue(UsersInfo.Users.class);
+                        users.setChallengeTitle(test.getText().toString());
+                        databaseReference.setValue(users);
+                        Log.e("OZME", users.getChallengeTitle());
+                        Intent intent = new Intent(getApplicationContext(), ProfilPerso.class);
+                        startActivity(intent);
+
+                    }catch (Exception e){
+                        Log.e("HELPPPPPPP : ", e.getLocalizedMessage());
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+            /*
+            databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    try{
+                        UsersInfo.Users users=dataSnapshot.getValue(UsersInfo.Users.class);
+                        users.setChallengeTitle(test.getText().toString());
+                        databaseReference.setValue(users);
+                        Log.e("OZME", users.getChallengeTitle());
+                        Intent intent = new Intent(getApplicationContext(), ProfilPerso.class);
+                        startActivity(intent);
+
+                    }catch (Exception e){
+                        Log.e("HELPPPPPPP : ", e.getLocalizedMessage());
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });*/
+
+
+        }
+    }
 
 }
