@@ -1,21 +1,12 @@
 package com.ozme;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.TextureView;
@@ -23,145 +14,43 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
-public class CameraActivity extends AppCompatActivity {
-    RelativeLayout cameraPreviewLayout;
-    private ImageSurfaceView mImageSurfaceView;
-    private Camera camera;
-    private ImageView capturedImageHolder;
-    private ImageView back, close;
-    private Button capture;
-    private Button capture2;
-    private MediaRecorder mMediaRecorder;
-    private ProgressBar progressBar;
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
 
-    private File mOutputFile;
-    boolean isRecording=false;
-    private static final String TAG = "Recorder";
+/**
+ * Created by jpec on 16/01/18.
+ */
+
+public class Camera2Activity extends AppCompatActivity {
+    private Camera mCamera;
     private TextureView mPreview;
+    private MediaRecorder mMediaRecorder;
+    private File mOutputFile;
 
+    private boolean isRecording = false;
+    private static final String TAG = "Recorder";
+    private Button captureButton;
 
-
-
-
-    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //FULL SCREEN
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setContentView(R.layout.camera);
+        setContentView(R.layout.sample_main);
 
-        progressBar=(ProgressBar)findViewById(R.id.progress_bar);
-        progressBar.setProgress(40);
-
-
-        cameraPreviewLayout=(RelativeLayout)findViewById(R.id.cameraPreview);
-        back=(ImageView)findViewById(R.id.back);
-        close=(ImageView)findViewById(R.id.delete);
-        back.setOnClickListener(onClickListener);
-        close.setOnClickListener(onClickListener);
-        //capturedImageHolder = (ImageView)findViewById(R.id.captured_image);
-        camera = checkDeviceCamera();
-        mImageSurfaceView = new ImageSurfaceView(this, camera);
-        cameraPreviewLayout.addView(mImageSurfaceView, 0);
-
-        //VIDEO
         mPreview = (TextureView) findViewById(R.id.surface_view);
-
-
-        capture = (Button)findViewById(R.id.capture);
-        capture2=(Button)findViewById(R.id.capture2);
-        capture.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                camera.takePicture(null, null, pictureCallback);
-                capture.setVisibility(View.GONE);
-            }
-        });
-
-        capture.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                capture.setVisibility(View.GONE);
-                return true;
-            }
-        });
+        captureButton = (Button) findViewById(R.id.button_capture);
     }
 
-
-
-    private Camera checkDeviceCamera(){
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.CAMERA}, 50);
-        }
-        Camera mCamera = null;
-        try {
-            mCamera = Camera.open();
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e("JPEC", e.getLocalizedMessage());
-        }
-        return mCamera;
-    }
-
-
-    Camera.PictureCallback pictureCallback = new Camera.PictureCallback() {
-        @Override
-        public void onPictureTaken(byte[] data, Camera camera) {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-            if(bitmap==null){
-                Log.e("JPEC", "Fail in taking photo");
-                return;
-            }
-            camera.stopPreview();
-            close.setVisibility(View.VISIBLE);
-
-        }
-    };
-
-
-
-    View.OnClickListener onClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            switch (v.getId()){
-                case R.id.back:
-                    capture.setVisibility(View.VISIBLE);
-                    close.setVisibility(View.GONE);
-                    camera.startPreview();
-                    break;
-                case R.id.delete:
-                    capture.setVisibility(View.VISIBLE);
-                    close.setVisibility(View.GONE);
-                    camera.startPreview();
-                    break;
-            }
-        }
-    };
-
-    //VIDEO--------------------------------------------
-    @Override
-    protected void onPause() {
-        super.onPause();
-        // if we are using MediaRecorder, release it first
-        releaseMediaRecorder();
-        // release the camera immediately on pause event
-        releaseCamera();
-    }
-
+    /**
+     * The capture button controls all user interaction. When recording, the button click
+     * stops recording, releases {@link android.media.MediaRecorder} and {@link android.hardware.Camera}. When not recording,
+     * it prepares the {@link android.media.MediaRecorder} and starts recording.
+     *
+     * @param view the view generating the event.
+     */
     public void onCaptureClick(View view) {
         if (isRecording) {
             // stop recording and release camera
@@ -175,19 +64,32 @@ public class CameraActivity extends AppCompatActivity {
                 mOutputFile.delete();
             }
             releaseMediaRecorder(); // release the MediaRecorder object
-            camera.lock();         // take camera access back from MediaRecorder
+            mCamera.lock();         // take camera access back from MediaRecorder
 
             // inform the user that recording has stopped
-            //setCaptureButtonText("Capture");
+            setCaptureButtonText("Capture");
             isRecording = false;
             releaseCamera();
             // END_INCLUDE(stop_release_media_recorder)
 
         } else {
             //Background task for preparing to capture
-            new CameraActivity.MediaPrepareTask().execute(null, null, null);
+            new MediaPrepareTask().execute(null, null, null);
 
         }
+    }
+
+    private void setCaptureButtonText(String title) {
+        captureButton.setText(title);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // if we are using MediaRecorder, release it first
+        releaseMediaRecorder();
+        // release the camera immediately on pause event
+        releaseCamera();
     }
 
     private void releaseMediaRecorder(){
@@ -199,25 +101,27 @@ public class CameraActivity extends AppCompatActivity {
             mMediaRecorder = null;
             // Lock camera for later use i.e taking it back from MediaRecorder.
             // MediaRecorder doesn't need it anymore and we will release it if the activity pauses.
-            camera.lock();
+            mCamera.lock();
         }
     }
+
     private void releaseCamera(){
-        if (camera != null){
+        if (mCamera != null){
             // release the camera for other applications
-            camera.release();
-            camera = null;
+            mCamera.release();
+            mCamera = null;
         }
     }
+
     private boolean prepareVideoRecorder(){
 
         // BEGIN_INCLUDE (configure_preview)
-        camera = CameraHelper.getDefaultCameraInstance();
+        mCamera = CameraHelper.getDefaultCameraInstance();
 
         // We need to make sure that our preview and recording video size are supported by the
         // camera. Query camera to find all the sizes and choose the optimal size given the
         // dimensions of our preview surface.
-        Camera.Parameters parameters = camera.getParameters();
+        Camera.Parameters parameters = mCamera.getParameters();
         List<Camera.Size> mSupportedPreviewSizes = parameters.getSupportedPreviewSizes();
         List<Camera.Size> mSupportedVideoSizes = parameters.getSupportedVideoSizes();
         Camera.Size optimalSize = CameraHelper.getOptimalVideoSize(mSupportedVideoSizes,
@@ -231,13 +135,13 @@ public class CameraActivity extends AppCompatActivity {
         // likewise for the camera object itself.
         parameters.setPreviewSize(profile.videoFrameWidth, profile.videoFrameHeight);
         if (parameters.getPreviewSize().width > parameters.getPreviewSize().height){
-            camera.setDisplayOrientation(90);
+            mCamera.setDisplayOrientation(90);
         }
-        camera.setParameters(parameters);
+        mCamera.setParameters(parameters);
         try {
             // Requires API level 11+, For backward compatibility use {@link setPreviewDisplay}
             // with {@link SurfaceView}
-            camera.setPreviewTexture(mPreview.getSurfaceTexture());
+            mCamera.setPreviewTexture(mPreview.getSurfaceTexture());
         } catch (IOException e) {
             Log.e(TAG, "Surface texture is unavailable or unsuitable" + e.getMessage());
             return false;
@@ -245,8 +149,8 @@ public class CameraActivity extends AppCompatActivity {
         mMediaRecorder = new MediaRecorder();
 
         // Step 1: Unlock and set camera to MediaRecorder
-        camera.unlock();
-        mMediaRecorder.setCamera(camera);
+        mCamera.unlock();
+        mMediaRecorder.setCamera(mCamera);
 
         // Step 2: Set sources
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT );
@@ -279,7 +183,10 @@ public class CameraActivity extends AppCompatActivity {
         return true;
     }
 
-
+    /**
+     * Asynchronous task for preparing the {@link android.media.MediaRecorder} since it's a long blocking
+     * operation.
+     */
     class MediaPrepareTask extends AsyncTask<Void, Void, Boolean> {
 
         @Override
@@ -302,13 +209,14 @@ public class CameraActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Boolean result) {
             if (!result) {
-                CameraActivity.this.finish();
+                Camera2Activity.this.finish();
             }
             // inform the user that recording has started
-            //setCaptureButtonText("Stop");
+            setCaptureButtonText("Stop");
 
         }
 
     }
+
 
 }

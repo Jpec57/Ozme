@@ -4,18 +4,12 @@ package com.ozme;
  * Created by jpec on 15/01/18.
  */
 
-import android.content.res.Resources;
 import android.hardware.Camera;
 import android.content.Context;
-import android.view.Display;
-import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.WindowManager;
 
 import java.io.IOException;
-
-import static android.content.Context.WINDOW_SERVICE;
 
 public class ImageSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
 
@@ -56,7 +50,11 @@ public class ImageSurfaceView extends SurfaceView implements SurfaceHolder.Callb
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        this.camera.stopPreview();
+        try {
+            this.camera.stopPreview();
+        }catch (Exception e){
+
+        }
         this.camera.release();
     }
 }
