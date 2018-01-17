@@ -3,11 +3,16 @@
     android:layout_width="match_parent"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
+<!-- LAYOUT DE FOND  -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/cameraPreview"/>
+    <TextureView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/surface_view" />
+    <!-- HAUT DE PAGE -->
     <ImageView
         android:layout_width="25sp"
         android:layout_height="25sp"
@@ -29,6 +34,8 @@
         android:id="@+id/delete"
         android:src="@drawable/timeline_delete"/>
 
+
+
     <ProgressBar
         android:layout_width="50sp"
         android:layout_height="50sp"
@@ -38,28 +45,102 @@
         android:layout_centerInParent="true"
         android:progressDrawable="@drawable/circular_progress_bar"/>
 
-    <Button
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@id/capture"
+        android:shadowRadius="5"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowColor="@color/colorPrimaryDark"
+        android:gravity="center_horizontal"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="2sp"
+        android:id="@+id/oz"
+        android:text="Ose me faire sourire"/>
+    <Button
+        android:layout_width="60sp"
+        android:layout_height="60sp"
+        android:text="Ok"
+        android:background="@drawable/profile_ellipse1"
+        android:id="@+id/capture3"
+        android:layout_above="@+id/options"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="15sp" />
+    <Button
+        android:layout_width="60sp"
+        android:layout_height="60sp"
         android:text="VIDEO"
         android:id="@+id/capture2"
+        android:background="@drawable/profile_ellipse1"
         android:onClick="onCaptureClick"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="30sp" />
+        android:layout_above="@+id/options"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="15sp"  />
     <Button
+        android:layout_width="60sp"
+        android:layout_height="60sp"
+        android:text="Photo"
+        android:background="@drawable/profile_ellipse1"
+        android:id="@+id/capture"
+        android:layout_above="@+id/options"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="15sp" />
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/todo"
-        android:id="@+id/capture"
+        android:id="@+id/options"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="30sp" />
+        android:layout_marginBottom="10sp"
+        android:orientation="horizontal">
+        <ImageView
+            android:layout_width="40sp"
+            android:layout_height="40sp"
+            android:contentDescription="@string/todo"
+            android:id="@+id/flash"
+            android:src="@drawable/photo_flash"/>
+        <ImageView
+            android:layout_width="40sp"
+            android:layout_height="40sp"
+            android:id="@+id/gallery"
+            android:layout_marginLeft="30sp"
+            android:layout_marginRight="30sp"
+            android:contentDescription="@string/todo"
+            android:src="@drawable/profile_photo"/>
+        <ImageView
+            android:layout_width="40sp"
+            android:layout_height="40sp"
+            android:id="@+id/switcher"
+            android:contentDescription="@string/todo"
+            android:src="@drawable/photo_switch"/>
+    </LinearLayout>
 
-    <TextureView
-        android:layout_width="fill_parent"
+    <LinearLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/surface_view" />
+        android:id="@+id/options2"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10sp"
+        android:visibility="gone"
+        android:orientation="horizontal">
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/options3"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10sp"
+        android:visibility="gone"
+        android:orientation="horizontal">
+
+    </LinearLayout>
+
+
+
 
 </RelativeLayout>

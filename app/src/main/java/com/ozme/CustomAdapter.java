@@ -13,6 +13,7 @@ import android.widget.BaseAdapter;
 import android.widget.Gallery;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
@@ -40,8 +41,6 @@ public class CustomAdapter extends BaseAdapter {
         this.m_name_ageArray=name_ageArray;
         this.m_timeArray=timeArray;
         this.m_profilesId=profilesId;
-
-
     }
     @Override
     public int getCount() {

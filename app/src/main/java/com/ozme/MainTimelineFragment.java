@@ -61,6 +61,9 @@ public class MainTimelineFragment extends FragmentActivity {
             public void onClick(View v) {
                 if (viewPager.getCurrentItem() != 1){
                     viewPager.setCurrentItem(1);
+                }else{
+                    Intent intent=new Intent(MainTimelineFragment.this, CameraActivity.class);
+                    startActivity(intent);
                 }
             }
         });

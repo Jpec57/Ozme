@@ -2,6 +2,8 @@ package com.ozme;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -20,27 +22,37 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+
+import static com.ozme.CameraHelper.MEDIA_TYPE_IMAGE;
+import static com.ozme.CameraHelper.MEDIA_TYPE_VIDEO;
 
 public class CameraActivity extends AppCompatActivity {
     RelativeLayout cameraPreviewLayout;
     private ImageSurfaceView mImageSurfaceView;
     private Camera camera;
-    private ImageView capturedImageHolder;
     private ImageView back, close;
     private Button capture;
     private Button capture2;
+    private Button capture3;
     private MediaRecorder mMediaRecorder;
     private ProgressBar progressBar;
 
@@ -48,6 +60,19 @@ public class CameraActivity extends AppCompatActivity {
     boolean isRecording=false;
     private static final String TAG = "Recorder";
     private TextureView mPreview;
+
+    private ImageView switcher;
+    private ImageView gallery;
+    private ImageView flash;
+    private TextView oz;
+
+    private LinearLayout options;
+    private LinearLayout options2;
+    private LinearLayout options3;
+
+    private File file;
+    private Bitmap picture;
+
 
 
 
@@ -67,13 +92,27 @@ public class CameraActivity extends AppCompatActivity {
         progressBar=(ProgressBar)findViewById(R.id.progress_bar);
         progressBar.setProgress(40);
 
+        //Options
+        switcher=(ImageView)findViewById(R.id.switcher);
+        flash=(ImageView)findViewById(R.id.flash);
+        gallery=(ImageView)findViewById(R.id.gallery);
+        switcher.setOnClickListener(onClickListener);
+        flash.setOnClickListener(onClickListener);
+        gallery.setOnClickListener(onClickListener);
+        options=(LinearLayout)findViewById(R.id.options);
+        options2=(LinearLayout)findViewById(R.id.options2);
+        options3=(LinearLayout)findViewById(R.id.options3);
+        oz=(TextView)findViewById(R.id.oz);
+        capture3=(Button)findViewById(R.id.capture3);
+
+
+
 
         cameraPreviewLayout=(RelativeLayout)findViewById(R.id.cameraPreview);
         back=(ImageView)findViewById(R.id.back);
         close=(ImageView)findViewById(R.id.delete);
         back.setOnClickListener(onClickListener);
         close.setOnClickListener(onClickListener);
-        //capturedImageHolder = (ImageView)findViewById(R.id.captured_image);
         camera = checkDeviceCamera();
         mImageSurfaceView = new ImageSurfaceView(this, camera);
         cameraPreviewLayout.addView(mImageSurfaceView, 0);
@@ -81,25 +120,51 @@ public class CameraActivity extends AppCompatActivity {
         //VIDEO
         mPreview = (TextureView) findViewById(R.id.surface_view);
 
-
         capture = (Button)findViewById(R.id.capture);
         capture2=(Button)findViewById(R.id.capture2);
         capture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 camera.takePicture(null, null, pictureCallback);
-                capture.setVisibility(View.GONE);
+                setView(2);
             }
         });
 
-        capture.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                capture.setVisibility(View.GONE);
-                return true;
-            }
-        });
     }
+
+    private void setView(int i){
+        switch(i){
+            case 1:
+                options.setVisibility(View.VISIBLE);
+                options2.setVisibility(View.GONE);
+                options3.setVisibility(View.GONE);
+
+                capture.setVisibility(View.VISIBLE);
+                capture2.setVisibility(View.GONE);
+                break;
+            case 2:
+                options.setVisibility(View.GONE);
+                options2.setVisibility(View.VISIBLE);
+                options3.setVisibility(View.GONE);
+
+                capture.setVisibility(View.GONE);
+                capture2.setVisibility(View.GONE);
+
+                oz.setVisibility(View.GONE);
+
+                break;
+            case 3 :
+                options.setVisibility(View.GONE);
+                options2.setVisibility(View.GONE);
+                options3.setVisibility(View.VISIBLE);
+
+                oz.setVisibility(View.GONE);
+
+                break;
+
+        }
+    }
+
 
 
 
@@ -121,11 +186,14 @@ public class CameraActivity extends AppCompatActivity {
     Camera.PictureCallback pictureCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-            if(bitmap==null){
+            picture = BitmapFactory.decodeByteArray(data, 0, data.length);
+            if(picture==null){
                 Log.e("JPEC", "Fail in taking photo");
                 return;
             }
+            //TODO Save img only if the user wants it
+            new fileFromBitmap().execute();
+            galleryAddPic();
             camera.stopPreview();
             close.setVisibility(View.VISIBLE);
 
@@ -144,13 +212,47 @@ public class CameraActivity extends AppCompatActivity {
                     camera.startPreview();
                     break;
                 case R.id.delete:
-                    capture.setVisibility(View.VISIBLE);
-                    close.setVisibility(View.GONE);
-                    camera.startPreview();
+                    Intent intent=new Intent(CameraActivity.this, CameraActivity.class);
+                    startActivity(intent);
+                    break;
+
+                case R.id.switcher:
+                    if (findViewById(R.id.capture).getVisibility()==View.VISIBLE){
+                        findViewById(R.id.capture).setVisibility(View.GONE);
+                        findViewById(R.id.capture2).setVisibility(View.VISIBLE);
+                        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                        layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+                        layoutParams.addRule(RelativeLayout.ABOVE, R.id.capture2);
+                        findViewById(R.id.oz).setLayoutParams(layoutParams);
+                    }else{
+                        findViewById(R.id.capture2).setVisibility(View.GONE);
+                        findViewById(R.id.capture).setVisibility(View.VISIBLE);
+                        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                        layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+                        layoutParams.addRule(RelativeLayout.ABOVE, R.id.capture);
+                        findViewById(R.id.oz).setLayoutParams(layoutParams);
+                    }
+                    break;
+                case R.id.gallery:
+                    break;
+                case R.id.flash:
+                    break;
+                case R.id.capture3:
+
                     break;
             }
         }
     };
+
+    private void galleryAddPic() {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), "Ozme");
+        Uri contentUri = Uri.fromFile(mediaStorageDir);
+        mediaScanIntent.setData(contentUri);
+        this.sendBroadcast(mediaScanIntent);
+    }
+
 
     //VIDEO--------------------------------------------
     @Override
@@ -181,6 +283,7 @@ public class CameraActivity extends AppCompatActivity {
             //setCaptureButtonText("Capture");
             isRecording = false;
             releaseCamera();
+            close.setVisibility(View.VISIBLE);
             // END_INCLUDE(stop_release_media_recorder)
 
         } else {
@@ -256,7 +359,7 @@ public class CameraActivity extends AppCompatActivity {
         mMediaRecorder.setProfile(profile);
 
         // Step 4: Set output file
-        mOutputFile = CameraHelper.getOutputMediaFile(CameraHelper.MEDIA_TYPE_VIDEO);
+        mOutputFile = CameraHelper.getOutputMediaFile(MEDIA_TYPE_VIDEO);
         if (mOutputFile == null) {
             return false;
         }
@@ -309,6 +412,63 @@ public class CameraActivity extends AppCompatActivity {
 
         }
 
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public class fileFromBitmap extends AsyncTask<Void, Integer, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            if (!Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
+                Log.e("JPEC", "Permission denied");
+                return  null;
+            }
+
+            File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES), "Ozme");
+
+            // Create the storage directory if it does not exist
+            if (! mediaStorageDir.exists()){
+                if (! mediaStorageDir.mkdirs()) {
+                    Log.e("JPEC", "failed to create directory");
+                    return null;
+                }
+            }
+            // Create a media file name
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+            //END
+
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            picture.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+            //file  = new File(context.getCacheDir(), "temporary_file.jpg");
+            file = new File(mediaStorageDir.getPath() + File.separator +
+                    "OZME_IMG_"+ timeStamp + ".jpg");            try {
+                FileOutputStream fo = new FileOutputStream(file);
+                fo.write(bytes.toByteArray());
+                fo.flush();
+                fo.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            // back to main thread after finishing doInBackground
+            // update your UI or take action after
+            // exp; make progressbar gone
+            //sendFile(file);
+
+        }
     }
 
 }
