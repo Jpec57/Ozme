@@ -169,6 +169,7 @@ public class CameraActivity extends AppCompatActivity {
 
                 oz.setVisibility(View.GONE);
                 close.setVisibility(View.VISIBLE);
+                save.setVisibility(View.VISIBLE);
 
                 break;
             case 3 :
@@ -263,9 +264,6 @@ public class CameraActivity extends AppCompatActivity {
                     if (mOutputFile==null){
                         new fileFromBitmap().execute();
                     }else{
-                        Log.e("JPEC", "Start moving");
-                        //File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                                //Environment.DIRECTORY_PICTURES), "Ozme");
                         File mediaStorageDir=new File(Environment.getExternalStoragePublicDirectory("Ozme")+"/Ozme");
 
                         if (! mediaStorageDir.exists()){
@@ -274,7 +272,6 @@ public class CameraActivity extends AppCompatActivity {
                             }
                         }
                         moveFile(mOutputFile.getParentFile().getPath()+"/", mOutputFile.getName(),mediaStorageDir.getPath()+"/");
-                        Log.e("JPEC", "End moving");
                     }
                     break;
                     //TODO handle sound here
@@ -294,7 +291,7 @@ public class CameraActivity extends AppCompatActivity {
     private void galleryAddPic() {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "Ozme");
+                "Ozme"), "Ozme");
         Uri contentUri = Uri.fromFile(mediaStorageDir);
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
@@ -493,12 +490,12 @@ public class CameraActivity extends AppCompatActivity {
                 return  null;
             }
 
-            File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_PICTURES), "Ozme");
+            File dir = new File(Environment.getExternalStoragePublicDirectory(
+                    "Ozme"), "Ozme");
 
             // Create the storage directory if it does not exist
-            if (! mediaStorageDir.exists()){
-                if (! mediaStorageDir.mkdirs()) {
+            if (! dir.exists()){
+                if (! dir.mkdirs()) {
                     Log.e("JPEC", "failed to create directory");
                     return null;
                 }
@@ -510,7 +507,7 @@ public class CameraActivity extends AppCompatActivity {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             picture.compress(Bitmap.CompressFormat.PNG, 100, bytes);
             //file  = new File(context.getCacheDir(), "temporary_file.jpg");
-            file = new File(mediaStorageDir.getPath() + File.separator +
+            file = new File(dir.getPath() + File.separator +
                     "OZME_IMG_"+ timeStamp + ".png");            try {
                 FileOutputStream fo = new FileOutputStream(file);
                 fo.write(bytes.toByteArray());
@@ -519,6 +516,16 @@ public class CameraActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            //MTP Scan to make it visible to the user
+            dir.setExecutable(true);
+            dir.setReadable(true);
+            dir.setWritable(true);
+            MediaScannerConnection.scanFile(CameraActivity.this, new String[] {file.getPath()}, null, null);
+
+            Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            Uri fileContentUri = Uri.fromFile(dir);
+            mediaScannerIntent.setData(fileContentUri);
+            CameraActivity.this.sendBroadcast(mediaScannerIntent);
 
             return null;
         }
@@ -533,6 +540,7 @@ public class CameraActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    save.setVisibility(View.GONE);
                     Toast.makeText(CameraActivity.this, "Votre image/vidéo a bien été enregistrée", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -618,6 +626,7 @@ public class CameraActivity extends AppCompatActivity {
         catch (Exception e) {
             Log.e("tag", e.getMessage());
         }
+        save.setVisibility(View.GONE);
         Toast.makeText(this, "Votre vidéo a bien été sauvegardée", Toast.LENGTH_SHORT).show();
 
     }
