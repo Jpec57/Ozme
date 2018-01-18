@@ -61,7 +61,7 @@
     <Button
         android:layout_width="60sp"
         android:layout_height="60sp"
-        android:text="Ok"
+        android:text="Suivant"
         android:background="@drawable/profile_ellipse1"
         android:id="@+id/capture3"
         android:layout_above="@+id/options"
@@ -125,6 +125,28 @@
         android:layout_marginBottom="10sp"
         android:visibility="gone"
         android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="40sp"
+            android:layout_height="40sp"
+            android:id="@+id/audio_on"
+            android:contentDescription="@string/todo"
+            android:src="@drawable/photo_audio_on"/>
+        <ImageView
+            android:layout_width="40sp"
+            android:layout_height="40sp"
+            android:id="@+id/audio_off"
+            android:visibility="gone"
+            android:contentDescription="@string/todo"
+            android:src="@drawable/photo_audio_off"/>
+        <ImageView
+            android:layout_width="40sp"
+            android:layout_height="40sp"
+            android:layout_marginLeft="30sp"
+            android:layout_marginRight="30sp"
+            android:contentDescription="@string/todo"
+            android:id="@+id/save"
+            android:src="@drawable/photo_save"/>
 
     </LinearLayout>
 

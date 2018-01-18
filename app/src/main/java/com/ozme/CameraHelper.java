@@ -169,6 +169,7 @@ public class CameraHelper {
             return null;
         }
 
+
         return mediaFile;
     }
 

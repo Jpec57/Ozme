@@ -12,6 +12,7 @@ import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -35,8 +36,12 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -53,6 +58,7 @@ public class CameraActivity extends AppCompatActivity {
     private Button capture;
     private Button capture2;
     private Button capture3;
+    private ImageView save, audio_on, audio_off;
     private MediaRecorder mMediaRecorder;
     private ProgressBar progressBar;
 
@@ -89,6 +95,9 @@ public class CameraActivity extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.camera);
 
+        //Purge cache directory
+        trimCache(CameraActivity.this);
+
         progressBar=(ProgressBar)findViewById(R.id.progress_bar);
         progressBar.setProgress(40);
 
@@ -104,6 +113,14 @@ public class CameraActivity extends AppCompatActivity {
         options3=(LinearLayout)findViewById(R.id.options3);
         oz=(TextView)findViewById(R.id.oz);
         capture3=(Button)findViewById(R.id.capture3);
+        capture3.setOnClickListener(onClickListener);
+
+        audio_off=(ImageView)findViewById(R.id.audio_off);
+        audio_on=(ImageView)findViewById(R.id.audio_on);
+        save=(ImageView)findViewById(R.id.save);
+        save.setOnClickListener(onClickListener);
+        audio_off.setOnClickListener(onClickListener);
+        audio_on.setOnClickListener(onClickListener);
 
 
 
@@ -151,6 +168,7 @@ public class CameraActivity extends AppCompatActivity {
                 capture2.setVisibility(View.GONE);
 
                 oz.setVisibility(View.GONE);
+                close.setVisibility(View.VISIBLE);
 
                 break;
             case 3 :
@@ -191,10 +209,10 @@ public class CameraActivity extends AppCompatActivity {
                 Log.e("JPEC", "Fail in taking photo");
                 return;
             }
-            //TODO Save img only if the user wants it
-            new fileFromBitmap().execute();
+            picture = RotateBitmap(picture);
             galleryAddPic();
             camera.stopPreview();
+            setView(2);
             close.setVisibility(View.VISIBLE);
 
         }
@@ -238,8 +256,37 @@ public class CameraActivity extends AppCompatActivity {
                 case R.id.flash:
                     break;
                 case R.id.capture3:
-
+                    Intent intent1 = new Intent(getApplicationContext(), MainTimelineFragment.class);
+                    startActivity(intent1);
                     break;
+                case R.id.save :
+                    if (mOutputFile==null){
+                        new fileFromBitmap().execute();
+                    }else{
+                        Log.e("JPEC", "Start moving");
+                        //File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                                //Environment.DIRECTORY_PICTURES), "Ozme");
+                        File mediaStorageDir=new File(Environment.getExternalStoragePublicDirectory("Ozme")+"/Ozme");
+
+                        if (! mediaStorageDir.exists()){
+                            if (! mediaStorageDir.mkdirs()) {
+                                Log.d("JPEC", "failed to create directory");
+                            }
+                        }
+                        moveFile(mOutputFile.getParentFile().getPath()+"/", mOutputFile.getName(),mediaStorageDir.getPath()+"/");
+                        Log.e("JPEC", "End moving");
+                    }
+                    break;
+                    //TODO handle sound here
+                case R.id.audio_on:
+                    findViewById(R.id.audio_on).setVisibility(View.GONE);
+                    findViewById(R.id.audio_off).setVisibility(View.VISIBLE);
+                    break;
+                case R.id.audio_off:
+                    findViewById(R.id.audio_on).setVisibility(View.VISIBLE);
+                    findViewById(R.id.audio_off).setVisibility(View.GONE);
+                    break;
+
             }
         }
     };
@@ -283,7 +330,9 @@ public class CameraActivity extends AppCompatActivity {
             //setCaptureButtonText("Capture");
             isRecording = false;
             releaseCamera();
-            close.setVisibility(View.VISIBLE);
+            setView(2);
+            //TODO We have to show the preview to the user
+
             // END_INCLUDE(stop_release_media_recorder)
 
         } else {
@@ -346,6 +395,10 @@ public class CameraActivity extends AppCompatActivity {
             return false;
         }
         mMediaRecorder = new MediaRecorder();
+        if (parameters.getPreviewSize().width > parameters.getPreviewSize().height) {
+            mMediaRecorder.setOrientationHint(90);
+        }
+
 
         // Step 1: Unlock and set camera to MediaRecorder
         camera.unlock();
@@ -359,10 +412,16 @@ public class CameraActivity extends AppCompatActivity {
         mMediaRecorder.setProfile(profile);
 
         // Step 4: Set output file
+        /*
         mOutputFile = CameraHelper.getOutputMediaFile(MEDIA_TYPE_VIDEO);
         if (mOutputFile == null) {
             return false;
-        }
+        }*/
+        //TODO delete the following line to save the video not in the cache
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+        mOutputFile=new File(CameraActivity.this.getCacheDir(), "OZME_VID_"+ timeStamp + ".mp4");
+
+
         //mMediaRecorder.setOutputFile(getExternalFilesDir(CameraHelper.MEDIA_TYPE_VIDEO));
         mMediaRecorder.setOutputFile(mOutputFile.getPath());
         Log.e("JPEC", mOutputFile.getPath());
@@ -408,10 +467,15 @@ public class CameraActivity extends AppCompatActivity {
                 CameraActivity.this.finish();
             }
             // inform the user that recording has started
-            //setCaptureButtonText("Stop");
-
         }
 
+    }
+
+    public static Bitmap RotateBitmap(Bitmap source)
+    {
+        Matrix matrix = new Matrix();
+        matrix.preRotate(90);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -444,10 +508,10 @@ public class CameraActivity extends AppCompatActivity {
             //END
 
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            picture.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+            picture.compress(Bitmap.CompressFormat.PNG, 100, bytes);
             //file  = new File(context.getCacheDir(), "temporary_file.jpg");
             file = new File(mediaStorageDir.getPath() + File.separator +
-                    "OZME_IMG_"+ timeStamp + ".jpg");            try {
+                    "OZME_IMG_"+ timeStamp + ".png");            try {
                 FileOutputStream fo = new FileOutputStream(file);
                 fo.write(bytes.toByteArray());
                 fo.flush();
@@ -466,9 +530,96 @@ public class CameraActivity extends AppCompatActivity {
             // back to main thread after finishing doInBackground
             // update your UI or take action after
             // exp; make progressbar gone
-            //sendFile(file);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(CameraActivity.this, "Votre image/vidéo a bien été enregistrée", Toast.LENGTH_SHORT).show();
+                }
+            });
 
         }
+    }
+    public static void trimCache(Context context) {
+        try {
+            File dir = context.getCacheDir();
+            if (dir != null && dir.isDirectory()) {
+                deleteDir(dir);
+            }
+        } catch (Exception e) {
+            Log.e("JPEC", "Error deleting cache file");
+        }
+    }
+
+    public static boolean deleteDir(File dir) {
+        if (dir != null && dir.isDirectory()) {
+            String[] children = dir.list();
+            for (int i = 0; i < children.length; i++) {
+                boolean success = deleteDir(new File(dir, children[i]));
+                if (!success) {
+                    return false;
+                }
+            }
+        }
+
+        // The directory is now empty so delete it
+        return dir.delete();
+    }
+
+    private void moveFile(String inputPath, String inputFile, String outputPath) {
+
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+
+            //create output directory if it doesn't exist
+            File dir = new File (outputPath);
+            if (!dir.exists())
+            {
+                dir.mkdirs();
+            }
+
+
+            in = new FileInputStream(inputPath + inputFile);
+            out = new FileOutputStream(outputPath + inputFile);
+
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+            in.close();
+            in = null;
+
+            // write the output file
+            out.flush();
+            out.close();
+            out = null;
+
+            // delete the original file
+            new File(inputPath + inputFile).delete();
+            dir.setExecutable(true);
+            dir.setReadable(true);
+            dir.setWritable(true);
+            MediaScannerConnection.scanFile(this, new String[] {outputPath + inputFile}, null, null);
+
+            Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            Uri fileContentUri = Uri.fromFile(dir);
+            mediaScannerIntent.setData(fileContentUri);
+            this.sendBroadcast(mediaScannerIntent);
+            Log.e("JPEC", dir.getPath());
+
+
+
+        }
+
+        catch (FileNotFoundException fnfe1) {
+            Log.e("tag", fnfe1.getMessage());
+        }
+        catch (Exception e) {
+            Log.e("tag", e.getMessage());
+        }
+        Toast.makeText(this, "Votre vidéo a bien été sauvegardée", Toast.LENGTH_SHORT).show();
+
     }
 
 }
