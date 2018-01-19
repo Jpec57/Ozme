@@ -25,4 +25,28 @@
         android:text="@string/todo"
         />
 
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+
+        android:orientation="vertical"
+        android:id="@+id/imgContainer"
+        android:visibility="gone"
+        android:background="@drawable/message_sender">
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/img"
+            android:maxHeight="300sp"
+            android:maxWidth="200sp"
+            android:contentDescription="@string/todo"
+            android:src="@drawable/a7x"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/imgDesc"/>
+    </LinearLayout>
+
 </LinearLayout>

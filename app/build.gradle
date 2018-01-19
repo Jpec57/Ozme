@@ -39,6 +39,9 @@ dependencies {
     compile 'org.florescu.android.rangeseekbar:rangeseekbar-library:0.3.0'
     compile 'com.theartofdev.edmodo:android-image-cropper:2.6.+'
     compile 'com.google.firebase:firebase-database:11.8.0'
+    compile 'com.google.firebase:firebase-storage:11.8.0'
+    //For number picker
+    compile 'com.wefika:horizontal-picker:1.1.1'
 
 
 }

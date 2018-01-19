@@ -1,6 +1,5 @@
 package com.ozme;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -20,6 +19,7 @@ import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
@@ -34,6 +34,16 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.Profile;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageMetadata;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.wefika.horizontalpicker.HorizontalPicker;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,12 +53,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import static com.ozme.CameraHelper.MEDIA_TYPE_IMAGE;
-import static com.ozme.CameraHelper.MEDIA_TYPE_VIDEO;
+/*
+DOCS :
+NUMBER PICKER : https://github.com/blazsolar/HorizontalPicker
+ */
 
 public class CameraActivity extends AppCompatActivity {
     RelativeLayout cameraPreviewLayout;
@@ -78,13 +91,20 @@ public class CameraActivity extends AppCompatActivity {
 
     private File file;
     private Bitmap picture;
+    private HorizontalPicker numberPicker2;
+    private int time;
+    private Button send;
+    private TextView friends;
+
+    private FirebaseDatabase database;
+    private DatabaseReference databaseReference;
+    String encoded="";
+    String type="image";
+    private FirebaseStorage firebaseStorage;
 
 
 
 
-
-
-    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -121,9 +141,29 @@ public class CameraActivity extends AppCompatActivity {
         save.setOnClickListener(onClickListener);
         audio_off.setOnClickListener(onClickListener);
         audio_on.setOnClickListener(onClickListener);
+        send=(Button)findViewById(R.id.send);
+        send.setOnClickListener(onClickListener);
+        friends=(TextView)findViewById(R.id.friends);
+        friends.setOnClickListener(onClickListener);
 
+        final CharSequence[] values = new CharSequence[]{"1","2","3","4","5","6","7","8", "9", "10", "11", "12", "13", "14", "15"};
+        numberPicker2=(HorizontalPicker)findViewById(R.id.numberPicker2);
+        numberPicker2.setValues(values);
+        numberPicker2.computeScroll();
+        numberPicker2.setOnItemClickedListener(new HorizontalPicker.OnItemClicked() {
+            @Override
+            public void onItemClicked(int index) {
+                numberPicker2.setSelectedItem(index);
+            }
+        });
+        numberPicker2.setOnItemSelectedListener(new HorizontalPicker.OnItemSelected() {
+            @Override
+            public void onItemSelected(int index) {
+                time= Integer.parseInt(values[index].toString());
+            }
+        });
 
-
+        database= FirebaseDatabase.getInstance();
 
         cameraPreviewLayout=(RelativeLayout)findViewById(R.id.cameraPreview);
         back=(ImageView)findViewById(R.id.back);
@@ -158,6 +198,7 @@ public class CameraActivity extends AppCompatActivity {
 
                 capture.setVisibility(View.VISIBLE);
                 capture2.setVisibility(View.GONE);
+                capture3.setVisibility(View.GONE);
                 break;
             case 2:
                 options.setVisibility(View.GONE);
@@ -166,10 +207,13 @@ public class CameraActivity extends AppCompatActivity {
 
                 capture.setVisibility(View.GONE);
                 capture2.setVisibility(View.GONE);
+                capture3.setVisibility(View.VISIBLE);
+
 
                 oz.setVisibility(View.GONE);
                 close.setVisibility(View.VISIBLE);
                 save.setVisibility(View.VISIBLE);
+                findViewById(R.id.sablier).setVisibility(View.GONE);
 
                 break;
             case 3 :
@@ -178,6 +222,10 @@ public class CameraActivity extends AppCompatActivity {
                 options3.setVisibility(View.VISIBLE);
 
                 oz.setVisibility(View.GONE);
+                back.setVisibility(View.VISIBLE);
+                findViewById(R.id.sablier).setVisibility(View.VISIBLE);
+
+                capture3.setVisibility(View.INVISIBLE);
 
                 break;
 
@@ -211,6 +259,34 @@ public class CameraActivity extends AppCompatActivity {
                 return;
             }
             picture = RotateBitmap(picture);
+            //TO DELETE
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            picture.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+            String path="responses";
+            StorageReference storageReference = firebaseStorage.getReference(path);
+            StorageMetadata metadata = new StorageMetadata.Builder()
+                    .setCustomMetadata("text", "First test with online storage")
+                    .build();
+
+            byte[] byteArray = stream.toByteArray();
+
+            UploadTask uploadTask = storageReference.putBytes(byteArray, metadata);
+            uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    Toast.makeText(CameraActivity.this, "Upload success", Toast.LENGTH_SHORT).show();
+
+                    Uri url= taskSnapshot.getDownloadUrl();
+                    encoded=url.toString();
+                }
+            });
+
+
+
+            //END
+            encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
             galleryAddPic();
             camera.stopPreview();
             setView(2);
@@ -257,8 +333,14 @@ public class CameraActivity extends AppCompatActivity {
                 case R.id.flash:
                     break;
                 case R.id.capture3:
+                    if (findViewById(R.id.options3).getVisibility()==View.VISIBLE){
+
+                    }else{
+                        setView(3);
+                    }
+                    /*
                     Intent intent1 = new Intent(getApplicationContext(), MainTimelineFragment.class);
-                    startActivity(intent1);
+                    startActivity(intent1);*/
                     break;
                 case R.id.save :
                     if (mOutputFile==null){
@@ -282,6 +364,17 @@ public class CameraActivity extends AppCompatActivity {
                 case R.id.audio_off:
                     findViewById(R.id.audio_on).setVisibility(View.VISIBLE);
                     findViewById(R.id.audio_off).setVisibility(View.GONE);
+                    break;
+                case R.id.send:
+                    //TODO
+                    List<Long> test= new ArrayList<Long>(){};
+                    test.add(11111111L);
+                    test.add(1155490200L);
+                    sendVideoPicture(test);
+                    Intent intent1=new Intent(CameraActivity.this, MainTimelineFragment.class);
+                    startActivity(intent1);
+                    break;
+                case R.id.friends:
                     break;
 
             }
@@ -328,6 +421,9 @@ public class CameraActivity extends AppCompatActivity {
             isRecording = false;
             releaseCamera();
             setView(2);
+            //TODO we have to encode in base64 String the video
+            new encodeVideoBase64().execute();
+
             //TODO We have to show the preview to the user
 
             // END_INCLUDE(stop_release_media_recorder)
@@ -489,7 +585,6 @@ public class CameraActivity extends AppCompatActivity {
                 Log.e("JPEC", "Permission denied");
                 return  null;
             }
-
             File dir = new File(Environment.getExternalStoragePublicDirectory(
                     "Ozme"), "Ozme");
 
@@ -506,11 +601,15 @@ public class CameraActivity extends AppCompatActivity {
 
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             picture.compress(Bitmap.CompressFormat.PNG, 100, bytes);
-            //file  = new File(context.getCacheDir(), "temporary_file.jpg");
+
+            //use it to share the picture in database
+            byte[] byteArray = bytes.toByteArray();
+            encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
+
             file = new File(dir.getPath() + File.separator +
                     "OZME_IMG_"+ timeStamp + ".png");            try {
                 FileOutputStream fo = new FileOutputStream(file);
-                fo.write(bytes.toByteArray());
+                fo.write(byteArray);
                 fo.flush();
                 fo.close();
             } catch (IOException e) {
@@ -629,6 +728,83 @@ public class CameraActivity extends AppCompatActivity {
         save.setVisibility(View.GONE);
         Toast.makeText(this, "Votre vidéo a bien été sauvegardée", Toast.LENGTH_SHORT).show();
 
+    }
+
+
+    @SuppressLint("StaticFieldLeak")
+    public class encodeVideoBase64 extends AsyncTask<Void, Void, Boolean>  {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            /*
+            byte[] data = Base64.decode(base64, Base64.DEFAULT);
+String imagePath = new String(data, "UTF-8");
+
+byte[] data = imagePath.getBytes("UTF-8");
+String base64 = Base64.encodeToString(data, Base64.DEFAULT);
+             */
+            File file = new File(mOutputFile.getPath());
+            byte[] bytesArray = new byte[(int) file.length()];
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(file);
+                try {
+                    fis.read(bytesArray); //read file into bytes[]
+                } catch (IOException e) {
+                    Log.e("JPEC", e.getMessage());
+                }
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    Log.e("JPEC", e.getMessage());
+
+                }
+            } catch (FileNotFoundException e) {
+                Log.e("JPEC", e.getMessage());
+            }
+            //Use it to share the video in the database
+            encoded=Base64.encodeToString(bytesArray, Base64.DEFAULT);
+            type="video";
+            Log.e("JPEC", "SUCCESS");
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean s) {
+            super.onPostExecute(s);
+        }
+
+
+    }
+
+
+    private void sendVideoPicture(List<Long> friends){
+        Log.e("JPEC", "Start sending");
+        //We get the user's Id
+        long persoId = Long.parseLong(Profile.getCurrentProfile().getId());
+        //We build the message we have to send to the different selected users
+        ConversationActivity.Message message = new ConversationActivity.Message();
+        message.setText("Ceci est un test pour les vidéos et photos");
+        message.setType(type);
+        message.setData(encoded);
+        message.setSender(persoId);
+
+        //Sending loop
+        for (int k=0; k < friends.size(); k++){
+            long strangerId = friends.get(k);
+            if (strangerId < persoId){
+                databaseReference=database.getReference("data/conversations/"+ strangerId+"/"+persoId);
+            }else{
+                databaseReference=database.getReference("data/conversations/"+ persoId+"/"+strangerId);
+            }
+
+            databaseReference.child(System.currentTimeMillis()+"").setValue(message);
+            Log.e("JPEC", "Sent to "+strangerId+" with ref : "+databaseReference.toString());
+        }
     }
 
 }

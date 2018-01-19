@@ -124,7 +124,7 @@ public class MessageViewAdapter extends BaseAdapter {
                         //Test if the message has been already read
                         //Is it the receiver's message ? If no, continue
                         if (message.getSender() != Long.parseLong(Profile.getCurrentProfile().getId())){
-                            //What is the current status ? If not read, show the "pastille rose"
+                            //What is the current data ? If not read, show the "pastille rose"
                             if (!message.isRead()){
                                 holder.notif.setVisibility(View.VISIBLE);
                             }else{

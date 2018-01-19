@@ -2,16 +2,12 @@ package com.ozme;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -29,9 +25,6 @@ import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.Profile;
-import com.facebook.login.widget.ProfilePictureView;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -40,18 +33,13 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import static com.ozme.ChallengeChoiceActivity.accessToken;
 /*
 NB : We must compare the id to know you will be the first node
  */
@@ -247,7 +235,7 @@ public class ConversationActivity extends AppCompatActivity {
                             databaseReference.child(dataSnapshot.getKey()).setValue(lastMessage);
                     }
 
-                    ConversationAdapter conversationAdapter = new ConversationAdapter(getApplicationContext(), conversationMessage, decodeFromBase64ToDrawable(circlePhoto));
+                    ConversationAdapter conversationAdapter = new ConversationAdapter(ConversationActivity.this, conversationMessage, decodeFromBase64ToDrawable(circlePhoto));
                 listView.setAdapter(conversationAdapter);
                 scrollMyListViewToBottom(conversationAdapter);
             }
@@ -312,12 +300,14 @@ public class ConversationActivity extends AppCompatActivity {
         public boolean read;
         public String text;
         public long sender;
-        public String status;
-        public Message(boolean read, long sender, String text, String status){
+        public String data;
+        public String type;
+        public Message(boolean read, long sender, String text, String data){
             this.text=text;
             this.read=read;
             this.sender=sender;
-            this.status= status;
+            this.data = data;
+            this.type="text";
         }
         public Message(){
 
@@ -347,14 +337,21 @@ public class ConversationActivity extends AppCompatActivity {
             this.sender = sender;
         }
 
-        public void setStatus(String status) {
-            this.status = status;
+        public void setData(String data) {
+            this.data = data;
         }
 
-        public String getStatus() {
-            return status;
+        public String getData() {
+            return data;
         }
 
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
     }
 
 
