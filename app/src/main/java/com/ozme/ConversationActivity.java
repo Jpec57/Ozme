@@ -215,10 +215,13 @@ public class ConversationActivity extends AppCompatActivity {
         listView.setItemsCanFocus(false);
         listView.setClickable(false);
         long persoId = Long.parseLong(Profile.getCurrentProfile().getId());
+        String path="";
         if (persoId < strangerId){
-            databaseReference=database.getReference("data/conversations/"+persoId+"/"+strangerId);
+            path="data/conversations/"+persoId+"/"+strangerId;
+            databaseReference=database.getReference(path);
         }else{
-            databaseReference=database.getReference("data/conversations/"+strangerId+"/"+persoId);
+            path="data/conversations/"+strangerId+"/"+persoId;
+            databaseReference=database.getReference(path);
         }
 
         conversationMessage= new ArrayList<>();
@@ -232,7 +235,21 @@ public class ConversationActivity extends AppCompatActivity {
 
                     if ( lastMessage.getSender() != Long.parseLong(Profile.getCurrentProfile().getId()) && !lastMessage.isRead() ){
                             lastMessage.setRead(true);
+                            try{
+                                if (lastMessage.getTime() != 0){
+                                    conversationMessage.remove(lastMessage);
+                                    dataSnapshot.getRef().removeValue();
+                                    //We have to delete the corresponding node
+
+                                }
+                            }catch (Exception e){
+
+                            }
+
                             databaseReference.child(dataSnapshot.getKey()).setValue(lastMessage);
+                    }
+                    if (lastMessage.getSender() != Long.parseLong(Profile.getCurrentProfile().getId()) && lastMessage.getTime() != 0 && lastMessage.isRead()){
+                        dataSnapshot.getRef().removeValue();
                     }
 
                     ConversationAdapter conversationAdapter = new ConversationAdapter(ConversationActivity.this, conversationMessage, decodeFromBase64ToDrawable(circlePhoto));
@@ -273,24 +290,6 @@ public class ConversationActivity extends AppCompatActivity {
         });
     }
 
-
-    public void getFbInfo(){
-        GraphRequest request = GraphRequest.newMeRequest(
-                AccessToken.getCurrentAccessToken(),
-                new GraphRequest.GraphJSONObjectCallback() {
-                    @Override
-                    public void onCompleted(
-                            JSONObject object,
-                            GraphResponse response) {
-
-                    }
-                });
-        Bundle parameters = new Bundle();
-        parameters.putString("fields", "id,first_name,birthday,work, gender");
-        request.setParameters(parameters);
-        request.executeAsync();
-
-    }
     /*
     https://firebase.google.com/docs/database/admin/retrieve-data
     https://firebase.google.com/docs/database/android/read-and-write
@@ -302,15 +301,18 @@ public class ConversationActivity extends AppCompatActivity {
         public long sender;
         public String data;
         public String type;
+        public int time;
         public Message(boolean read, long sender, String text, String data){
             this.text=text;
             this.read=read;
             this.sender=sender;
             this.data = data;
             this.type="text";
+            this.time=0;
         }
         public Message(){
-
+            this.type="text";
+            this.time=0;
         }
 
         public boolean isRead() {
@@ -351,6 +353,14 @@ public class ConversationActivity extends AppCompatActivity {
 
         public void setType(String type) {
             this.type = type;
+        }
+
+        public int getTime() {
+            return time;
+        }
+
+        public void setTime(int time) {
+            this.time = time;
         }
     }
 

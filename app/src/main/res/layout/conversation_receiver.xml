@@ -30,7 +30,6 @@
             android:maxHeight="300sp"
             android:maxWidth="200sp"
             android:contentDescription="@string/todo"
-            android:src="@drawable/a7x"
             />
         <TextView
             android:layout_width="wrap_content"

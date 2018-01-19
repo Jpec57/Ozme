@@ -129,8 +129,18 @@ public class MessageViewAdapter extends BaseAdapter {
                                 holder.notif.setVisibility(View.VISIBLE);
                             }else{
                                 holder.notif.setVisibility(View.INVISIBLE);
+                                try{
+                                    if (message.getTime() != 0){
+                                        dataSnapshot.getRef().removeValue();
+                                        Log.e("JPEC", "PUTAIN OUI");
+                                    }
+                                }catch (Exception e){
+
+                                }
+
                             }
                         }
+
                     } else {
                         holder.desc.setText("Error");
                     }

@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -35,6 +36,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.Profile;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -100,7 +102,8 @@ public class CameraActivity extends AppCompatActivity {
     private DatabaseReference databaseReference;
     String encoded="";
     String type="image";
-    private FirebaseStorage firebaseStorage;
+    public FirebaseStorage firebaseStorage;
+    byte[] dataByteArray;
 
 
 
@@ -121,71 +124,7 @@ public class CameraActivity extends AppCompatActivity {
         progressBar=(ProgressBar)findViewById(R.id.progress_bar);
         progressBar.setProgress(40);
 
-        //Options
-        switcher=(ImageView)findViewById(R.id.switcher);
-        flash=(ImageView)findViewById(R.id.flash);
-        gallery=(ImageView)findViewById(R.id.gallery);
-        switcher.setOnClickListener(onClickListener);
-        flash.setOnClickListener(onClickListener);
-        gallery.setOnClickListener(onClickListener);
-        options=(LinearLayout)findViewById(R.id.options);
-        options2=(LinearLayout)findViewById(R.id.options2);
-        options3=(LinearLayout)findViewById(R.id.options3);
-        oz=(TextView)findViewById(R.id.oz);
-        capture3=(Button)findViewById(R.id.capture3);
-        capture3.setOnClickListener(onClickListener);
-
-        audio_off=(ImageView)findViewById(R.id.audio_off);
-        audio_on=(ImageView)findViewById(R.id.audio_on);
-        save=(ImageView)findViewById(R.id.save);
-        save.setOnClickListener(onClickListener);
-        audio_off.setOnClickListener(onClickListener);
-        audio_on.setOnClickListener(onClickListener);
-        send=(Button)findViewById(R.id.send);
-        send.setOnClickListener(onClickListener);
-        friends=(TextView)findViewById(R.id.friends);
-        friends.setOnClickListener(onClickListener);
-
-        final CharSequence[] values = new CharSequence[]{"1","2","3","4","5","6","7","8", "9", "10", "11", "12", "13", "14", "15"};
-        numberPicker2=(HorizontalPicker)findViewById(R.id.numberPicker2);
-        numberPicker2.setValues(values);
-        numberPicker2.computeScroll();
-        numberPicker2.setOnItemClickedListener(new HorizontalPicker.OnItemClicked() {
-            @Override
-            public void onItemClicked(int index) {
-                numberPicker2.setSelectedItem(index);
-            }
-        });
-        numberPicker2.setOnItemSelectedListener(new HorizontalPicker.OnItemSelected() {
-            @Override
-            public void onItemSelected(int index) {
-                time= Integer.parseInt(values[index].toString());
-            }
-        });
-
-        database= FirebaseDatabase.getInstance();
-
-        cameraPreviewLayout=(RelativeLayout)findViewById(R.id.cameraPreview);
-        back=(ImageView)findViewById(R.id.back);
-        close=(ImageView)findViewById(R.id.delete);
-        back.setOnClickListener(onClickListener);
-        close.setOnClickListener(onClickListener);
-        camera = checkDeviceCamera();
-        mImageSurfaceView = new ImageSurfaceView(this, camera);
-        cameraPreviewLayout.addView(mImageSurfaceView, 0);
-
-        //VIDEO
-        mPreview = (TextureView) findViewById(R.id.surface_view);
-
-        capture = (Button)findViewById(R.id.capture);
-        capture2=(Button)findViewById(R.id.capture2);
-        capture.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                camera.takePicture(null, null, pictureCallback);
-                setView(2);
-            }
-        });
+        bindingView();
 
     }
 
@@ -232,9 +171,6 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
-
-
-
     private Camera checkDeviceCamera(){
         if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.CAMERA}, 50);
@@ -263,27 +199,8 @@ public class CameraActivity extends AppCompatActivity {
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             picture.compress(Bitmap.CompressFormat.PNG, 100, stream);
-
-            String path="responses";
-            StorageReference storageReference = firebaseStorage.getReference(path);
-            StorageMetadata metadata = new StorageMetadata.Builder()
-                    .setCustomMetadata("text", "First test with online storage")
-                    .build();
-
             byte[] byteArray = stream.toByteArray();
-
-            UploadTask uploadTask = storageReference.putBytes(byteArray, metadata);
-            uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Toast.makeText(CameraActivity.this, "Upload success", Toast.LENGTH_SHORT).show();
-
-                    Uri url= taskSnapshot.getDownloadUrl();
-                    encoded=url.toString();
-                }
-            });
-
-
+            dataByteArray=byteArray;
 
             //END
             encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
@@ -517,7 +434,6 @@ public class CameraActivity extends AppCompatActivity {
 
         //mMediaRecorder.setOutputFile(getExternalFilesDir(CameraHelper.MEDIA_TYPE_VIDEO));
         mMediaRecorder.setOutputFile(mOutputFile.getPath());
-        Log.e("JPEC", mOutputFile.getPath());
 
         // Step 5: Prepare configured MediaRecorder
         try {
@@ -740,15 +656,9 @@ public class CameraActivity extends AppCompatActivity {
 
         @Override
         protected Boolean doInBackground(Void... voids) {
-            /*
-            byte[] data = Base64.decode(base64, Base64.DEFAULT);
-String imagePath = new String(data, "UTF-8");
-
-byte[] data = imagePath.getBytes("UTF-8");
-String base64 = Base64.encodeToString(data, Base64.DEFAULT);
-             */
             File file = new File(mOutputFile.getPath());
             byte[] bytesArray = new byte[(int) file.length()];
+            dataByteArray=bytesArray;
             FileInputStream fis = null;
             try {
                 fis = new FileInputStream(file);
@@ -783,28 +693,131 @@ String base64 = Base64.encodeToString(data, Base64.DEFAULT);
 
 
     private void sendVideoPicture(List<Long> friends){
-        Log.e("JPEC", "Start sending");
         //We get the user's Id
         long persoId = Long.parseLong(Profile.getCurrentProfile().getId());
         //We build the message we have to send to the different selected users
-        ConversationActivity.Message message = new ConversationActivity.Message();
+        final ConversationActivity.Message message = new ConversationActivity.Message();
         message.setText("Ceci est un test pour les vidéos et photos");
         message.setType(type);
         message.setData(encoded);
         message.setSender(persoId);
+        message.setTime(time);
+
+        String path="";
+        String pathStorage="";
+        StorageReference storageReference;
 
         //Sending loop
         for (int k=0; k < friends.size(); k++){
+
             long strangerId = friends.get(k);
             if (strangerId < persoId){
-                databaseReference=database.getReference("data/conversations/"+ strangerId+"/"+persoId);
-            }else{
-                databaseReference=database.getReference("data/conversations/"+ persoId+"/"+strangerId);
-            }
+                path=strangerId+"/"+persoId;
+                pathStorage="responses/"+path+"/"+System.currentTimeMillis();
+                databaseReference=database.getReference("data/conversations/"+ path);
+                storageReference = firebaseStorage.getReference(pathStorage);
 
-            databaseReference.child(System.currentTimeMillis()+"").setValue(message);
-            Log.e("JPEC", "Sent to "+strangerId+" with ref : "+databaseReference.toString());
+
+            }else{
+                path=persoId+"/"+strangerId;
+                pathStorage="responses/"+path+"/"+System.currentTimeMillis();
+                databaseReference=database.getReference("data/conversations/"+ path);
+                storageReference = firebaseStorage.getReference(pathStorage);
+
+
+            }
+            //Using Storage
+            StorageMetadata metadata = new StorageMetadata.Builder()
+                    .setCustomMetadata("text", "First test with online storage")
+                    .build();
+            UploadTask uploadTask = storageReference.putBytes(dataByteArray, metadata);
+            uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    Toast.makeText(CameraActivity.this, "Upload success", Toast.LENGTH_SHORT).show();
+
+                    Uri url= taskSnapshot.getDownloadUrl();
+                    message.setData(url.toString());
+                    databaseReference.child(System.currentTimeMillis()+"").setValue(message);
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.e("JPEC", e.getLocalizedMessage());
+                }
+            });
+
+
         }
+
+    }
+    private void bindingView(){
+        switcher=(ImageView)findViewById(R.id.switcher);
+        flash=(ImageView)findViewById(R.id.flash);
+        gallery=(ImageView)findViewById(R.id.gallery);
+        options=(LinearLayout)findViewById(R.id.options);
+        options2=(LinearLayout)findViewById(R.id.options2);
+        options3=(LinearLayout)findViewById(R.id.options3);
+        oz=(TextView)findViewById(R.id.oz);
+        capture3=(Button)findViewById(R.id.capture3);
+        audio_off=(ImageView)findViewById(R.id.audio_off);
+        audio_on=(ImageView)findViewById(R.id.audio_on);
+        save=(ImageView)findViewById(R.id.save);
+        friends=(TextView)findViewById(R.id.friends);
+        send=(Button)findViewById(R.id.send);
+        cameraPreviewLayout=(RelativeLayout)findViewById(R.id.cameraPreview);
+        back=(ImageView)findViewById(R.id.back);
+        close=(ImageView)findViewById(R.id.delete);
+        numberPicker2=(HorizontalPicker)findViewById(R.id.numberPicker2);
+        mPreview = (TextureView) findViewById(R.id.surface_view);
+        capture = (Button)findViewById(R.id.capture);
+
+
+        switcher.setOnClickListener(onClickListener);
+        flash.setOnClickListener(onClickListener);
+        gallery.setOnClickListener(onClickListener);
+        capture3.setOnClickListener(onClickListener);
+        save.setOnClickListener(onClickListener);
+        audio_off.setOnClickListener(onClickListener);
+        audio_on.setOnClickListener(onClickListener);
+        send.setOnClickListener(onClickListener);
+        friends.setOnClickListener(onClickListener);
+
+
+        final CharSequence[] values = new CharSequence[]{"0","1","2","3","4","5","6","7","8", "9", "10", "11", "12", "13", "14", "15"};
+        numberPicker2.setValues(values);
+        numberPicker2.computeScroll();
+        numberPicker2.setOnItemClickedListener(new HorizontalPicker.OnItemClicked() {
+            @Override
+            public void onItemClicked(int index) {
+                numberPicker2.setSelectedItem(index);
+            }
+        });
+        numberPicker2.setOnItemSelectedListener(new HorizontalPicker.OnItemSelected() {
+            @Override
+            public void onItemSelected(int index) {
+                time= Integer.parseInt(values[index].toString());
+            }
+        });
+
+        database= FirebaseDatabase.getInstance();
+        firebaseStorage = FirebaseStorage.getInstance();
+
+
+        back.setOnClickListener(onClickListener);
+        close.setOnClickListener(onClickListener);
+        camera = checkDeviceCamera();
+        mImageSurfaceView = new ImageSurfaceView(this, camera);
+        cameraPreviewLayout.addView(mImageSurfaceView, 0);
+        capture2=(Button)findViewById(R.id.capture2);
+        capture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                camera.takePicture(null, null, pictureCallback);
+                setView(2);
+            }
+        });
+
     }
 
 }

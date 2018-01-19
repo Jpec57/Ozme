@@ -10,7 +10,6 @@
         android:maxWidth="500sp"
         android:maxHeight="800sp"
         android:contentDescription="@string/todo"
-        android:src="@drawable/papa_mariage_enzo"
         android:id="@+id/img"/>
     <VideoView
         android:layout_width="wrap_content"

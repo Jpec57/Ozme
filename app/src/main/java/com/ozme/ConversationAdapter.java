@@ -6,7 +6,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +19,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.VideoView;
 
+import com.bumptech.glide.Glide;
 import com.facebook.Profile;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -35,12 +45,17 @@ public class ConversationAdapter extends BaseAdapter {
     ArrayList<ConversationActivity.Message> m_conversationMessage;
     CircleImageView circleProfile;
     Drawable drawable;
+    public FirebaseStorage firebaseStorage;
+    public StorageReference storageReference;
+
 
     public ConversationAdapter(Context applicationContext, ArrayList<ConversationActivity.Message> conversationMessage, Drawable circlePhoto){
         this.m_context = applicationContext;
         this.m_conversationMessage=conversationMessage;
         inflater = (LayoutInflater.from(applicationContext));
         this.drawable=circlePhoto;
+
+        firebaseStorage = FirebaseStorage.getInstance();
     }
     @Override
     public int getCount() {
@@ -69,19 +84,30 @@ public class ConversationAdapter extends BaseAdapter {
 
             String type= message.getType();
             if (type != null && !type.equals("") && !type.equals("text")) {
+
                 LinearLayout imgContainer= (LinearLayout) convertView.findViewById(R.id.imgContainer);
                 imgContainer.setVisibility(View.VISIBLE);
-                ImageView img = (ImageView)convertView.findViewById(R.id.img);
+                final ImageView img = (ImageView)convertView.findViewById(R.id.img);
                 TextView imgDesc= (TextView)convertView.findViewById(R.id.imgDesc);
 
+                storageReference=firebaseStorage.getReferenceFromUrl(message.getData());
+                // Load the image using Glide
+                storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        Picasso.with(m_context).load(uri).into(img);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e("JPEC", "Failed to load the img");
+                    }
+                });
 
-                final byte[] rawMedia = Base64.decode(message.getData(),Base64.DEFAULT);
-                Bitmap bmp = BitmapFactory.decodeByteArray(rawMedia, 0, rawMedia.length);
-                img.setImageBitmap(bmp);
                 img.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        showDialog(message.getType(), rawMedia);
+                        showDialog(message.getType(), message.getData(), message.getTime());
                     }
                 });
 
@@ -102,18 +128,37 @@ public class ConversationAdapter extends BaseAdapter {
             if (type != null && !type.equals("") && !type.equals("text")) {
                 LinearLayout imgContainer= (LinearLayout) convertView.findViewById(R.id.imgContainer);
                 imgContainer.setVisibility(View.VISIBLE);
-                ImageView img = (ImageView)convertView.findViewById(R.id.img);
+                final ImageView img = (ImageView)convertView.findViewById(R.id.img);
                 TextView imgDesc= (TextView)convertView.findViewById(R.id.imgDesc);
 
-                final byte[] rawMedia = Base64.decode(message.getData(), Base64.DEFAULT);
-                Bitmap bmp = BitmapFactory.decodeByteArray(rawMedia, 0, rawMedia.length);
-                img.setImageBitmap(bmp);
+                storageReference=firebaseStorage.getReferenceFromUrl(message.getData());
+                // Load the image using Glide
+                storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        Picasso.with(m_context).load(uri).into(img);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e("JPEC", "Failed to load the img");
+                    }
+                });
+
                 img.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        showDialog(message.getType(), rawMedia);
+                        showDialog(message.getType(), message.getData(), message.getTime());
                     }
                 });
+
+                try{
+                    if (message.getTime() !=  0 && message.getSender() != Long.parseLong(Profile.getCurrentProfile().getId())){
+                        img.performClick();
+                    }
+                }catch (Exception e){
+
+                }
 
                 messageText.setVisibility(View.GONE);
                 imgDesc.setText(message.getText());
@@ -124,18 +169,46 @@ public class ConversationAdapter extends BaseAdapter {
         return convertView;
     }
 
-    private void showDialog(String type, byte[] rawMedia){
-        Dialog dialog = new Dialog(m_context);
+    private void showDialog(String type, String data, final int time){
+        final Dialog dialog = new Dialog(m_context);
         dialog.setContentView(R.layout.dialog_show_oz);
         dialog.setTitle("Oz - Réponse au défi");
 
-        ImageView imageView = (ImageView)dialog.findViewById(R.id.img);
+        final ImageView imageView = (ImageView)dialog.findViewById(R.id.img);
         if (type.equals("video")){
             VideoView videoView= (VideoView)dialog.findViewById(R.id.video);
             videoView.setVisibility(View.VISIBLE);
             imageView.setVisibility(View.GONE);
         }else{
-            imageView.setImageBitmap(BitmapFactory.decodeByteArray(rawMedia, 0, rawMedia.length));
+            storageReference=firebaseStorage.getReferenceFromUrl(data);
+            // Load the image using Glide
+            storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    Picasso.with(m_context).load(uri).into(imageView);
+                    try{
+                        new android.os.Handler().postDelayed(
+                                new Runnable() {
+                                    public void run() {
+                                        dialog.dismiss();
+                                        m_conversationMessage.remove(m_conversationMessage.size()-1);
+                                        notifyDataSetChanged();
+
+                                    }
+                                },
+                                time*1000);
+                    }catch (Exception e){
+
+                    }
+
+
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.e("JPEC", "Failed to load the img");
+                }
+            });
         }
 
         dialog.show();
