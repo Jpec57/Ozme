@@ -258,14 +258,11 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             newUser.setFilter(newFilter);
             databaseReference.setValue(newUser);
         }else{
-            databaseReference.addValueEventListener(new ValueEventListener() {
+            databaseReference.child("challengeTitle").addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     try{
-                        UsersInfo.Users users=dataSnapshot.getValue(UsersInfo.Users.class);
-                        users.setChallengeTitle(test.getText().toString());
-                        databaseReference.setValue(users);
-                        Log.e("OZME", users.getChallengeTitle());
+                        dataSnapshot.getRef().setValue(test.getText().toString());
                         Intent intent = new Intent(getApplicationContext(), ProfilPerso.class);
                         startActivity(intent);
 

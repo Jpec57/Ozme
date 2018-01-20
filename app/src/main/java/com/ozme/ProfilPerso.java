@@ -56,6 +56,9 @@ public class ProfilPerso extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.profile_perso);
 
+        database= FirebaseDatabase.getInstance();
+
+
         pageLayout();
 
         sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
@@ -150,7 +153,6 @@ public class ProfilPerso extends AppCompatActivity {
         int[] id = {R.drawable.travel, R.drawable.a7x, R.drawable.papa_mariage_enzo, R.drawable.gourmandise, R.drawable.travel, R.drawable.a7x};
         //Construction of the array shades
         boolean[] shades = {true, false, false, true, true, true};
-        database= FirebaseDatabase.getInstance();
         databaseReference=database.getReference("data/users");
         for (int k=0; k<desc.size(); k++){
             shades[k]=sharedPreferences2.getBoolean(k+"", true);
@@ -162,6 +164,7 @@ public class ProfilPerso extends AppCompatActivity {
             }
         }
         //TODO
+        /*
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -181,7 +184,7 @@ public class ProfilPerso extends AppCompatActivity {
 
             }
         });
-
+*/
 
 
         recycler.setAdapter(new ProfileWhatILikeAdapter(this, desc, id, shades));
@@ -229,9 +232,23 @@ public class ProfilPerso extends AppCompatActivity {
         String challenge = " "+sharedPreferences.getString("challenge", "me faire des lasagnes");
         challenge_text.setText(challenge);
         challenge_text.setOnClickListener(onClickListener);
-        String name_age = sharedPreferences.getString("first_name", "Julie");
-        name_age=name_age+", "+sharedPreferences.getString("birthday", "28");
-        fb_name_age.setText(name_age);
+        DatabaseReference reference = database.getReference("/data/users/"+ Profile.getCurrentProfile().getId()+"/filter/age");
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String name_age = sharedPreferences.getString("first_name", "Julie")+", "+dataSnapshot.getValue().toString();
+                //name_age=name_age+", "+sharedPreferences.getString("birthday", "28");
+                fb_name_age.setText(name_age);
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
         //END
     }
 

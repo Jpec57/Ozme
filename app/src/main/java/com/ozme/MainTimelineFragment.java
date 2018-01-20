@@ -1,6 +1,7 @@
 package com.ozme;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -10,12 +11,23 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import com.facebook.Profile;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 /*
 DOCS : https://developer.android.com/training/implementing-navigation/lateral.html#horizontal-paging
@@ -67,6 +79,8 @@ public class MainTimelineFragment extends FragmentActivity {
                 }
             }
         });
+        SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
+        getAge(sharedPreferences.getString("birthday", null));
 
 
     }
@@ -129,5 +143,53 @@ FragmentStatePagerAdapter
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void getAge(String birthday) {
+        int i=0;
+        StringBuilder m= new StringBuilder();
+        StringBuilder d= new StringBuilder();
+        StringBuilder y= new StringBuilder();
+
+        for (int k =0; k<birthday.length(); k++){
+            String loop=birthday.substring(k, k+1);
+            if (loop.equals("/")){
+                i++;
+            }else{
+                switch (i){
+                    case 0:
+                        m.append(loop);
+                        break;
+                    case 1 :
+                        d.append(loop);
+                        break;
+                    case 2 :
+                        y.append(loop);
+                        break;
+                }
+            }
+
+        }
+        int birthdayMonth=Integer.parseInt(m.toString());
+        int birthdayDay=Integer.parseInt(d.toString());
+        int birthdayYear=Integer.parseInt(y.toString());
+        Log.e("JPEC", "test : "+birthdayMonth);
+
+        Calendar dob = Calendar.getInstance();
+        Calendar today = Calendar.getInstance();
+
+        dob.set(birthdayYear, birthdayMonth, birthdayDay);
+        int age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR);
+
+        if(birthdayMonth > (today.get(Calendar.MONTH)+1) || (birthdayMonth == (today.get(Calendar.MONTH)) && birthdayDay > today.get(Calendar.DAY_OF_MONTH)+1)) {
+            age--;
+        }
+
+        FirebaseDatabase database=FirebaseDatabase.getInstance();
+        DatabaseReference reference = database.getReference("/data/users/"+ Profile.getCurrentProfile().getId()+"/filter/age");
+        reference.setValue(age);
+
+
+
     }
 }

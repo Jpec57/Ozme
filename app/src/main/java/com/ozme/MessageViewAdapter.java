@@ -27,10 +27,13 @@ import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -144,7 +147,9 @@ public class MessageViewAdapter extends BaseAdapter {
                     } else {
                         holder.desc.setText("Error");
                     }
-                    holder.date.setText(new Date(Long.parseLong(dataSnapshot.getKey())).toString());
+                    Date date = new Date(Long.parseLong(dataSnapshot.getKey()));
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, d MMM yyyy \nHH:mm:ss", Locale.FRANCE);
+                    holder.date.setText(simpleDateFormat.format(date));
                     return;
 
             }
