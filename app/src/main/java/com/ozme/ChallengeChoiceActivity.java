@@ -35,6 +35,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
@@ -68,12 +69,20 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
     JSONArray age_range;
     SharedPreferences sharedPreferences;
 
+    List<String> categoriesTitles= new ArrayList<String>();
+    List<List<String>> categoriesKeywords = new ArrayList<List<String>>();
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.choose_challenge);
         context=this;
+        database= FirebaseDatabase.getInstance();
+
+        setCategoriesBubbles();
+
 
         test = new TextView(getApplicationContext());
         next =(TextView)findViewById(R.id.next);
@@ -241,7 +250,6 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
     }
 
     private void firstConnection(boolean isFirstConnection){
-        database= FirebaseDatabase.getInstance();
         databaseReference=database.getReference("data/users/"+Profile.getCurrentProfile().getId());
         if (isFirstConnection){
             UsersInfo.Users newUser = new UsersInfo.Users();
@@ -302,6 +310,26 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
 
 
         }
+    }
+
+    private void setCategoriesBubbles(){
+        DatabaseReference categoriesRef = database.getReference("data/categories/");
+        categoriesRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot category : dataSnapshot.getChildren()){
+                    categoriesTitles.add(category.child("image").getValue(String.class));
+                    GenericTypeIndicator<List<String>> gti = new GenericTypeIndicator<List<String>>() {};
+                    categoriesKeywords.add(category.child("keywords").getValue(gti));
+
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
 }
