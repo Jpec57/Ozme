@@ -1,5 +1,6 @@
 package com.ozme;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,6 +14,8 @@ import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Base64;
@@ -193,8 +196,8 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
         //Pink filter
         RelativeLayout pink = (RelativeLayout)findViewById(R.id.pink);
         RelativeLayout.LayoutParams newParams = new RelativeLayout.LayoutParams(display.getWidth(), display.getWidth()/3);
-        newParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-        newParams.setMargins(0,0,0,-2);
+        newParams.addRule(RelativeLayout.ALIGN_BOTTOM, R.id.friendProfilePicture);
+        newParams.setMargins(0,0,0,40);
         pink.setLayoutParams(newParams);
         test.setText("trouver un bon défi");
         test.setTextSize(18);
@@ -284,29 +287,6 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
 
                 }
             });
-            /*
-            databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    try{
-                        UsersInfo.Users users=dataSnapshot.getValue(UsersInfo.Users.class);
-                        users.setChallengeTitle(test.getText().toString());
-                        databaseReference.setValue(users);
-                        Log.e("OZME", users.getChallengeTitle());
-                        Intent intent = new Intent(getApplicationContext(), ProfilPerso.class);
-                        startActivity(intent);
-
-                    }catch (Exception e){
-                        Log.e("HELPPPPPPP : ", e.getLocalizedMessage());
-                    }
-
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });*/
 
 
         }
@@ -314,6 +294,7 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
 
     private void setCategoriesBubbles(){
         DatabaseReference categoriesRef = database.getReference("data/categories/");
+
         categoriesRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -321,6 +302,14 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
                     categoriesTitles.add(category.child("image").getValue(String.class));
                     GenericTypeIndicator<List<String>> gti = new GenericTypeIndicator<List<String>>() {};
                     categoriesKeywords.add(category.child("keywords").getValue(gti));
+                    Log.e("JPEC", categoriesTitles.get(categoriesTitles.size()-1));
+                    RecyclerView recycler = (RecyclerView)findViewById(R.id.categoriesRecycler);
+                    recycler.setHasFixedSize(true);
+                    recycler.setLayoutManager(new LinearLayoutManager(ChallengeChoiceActivity.this, LinearLayoutManager.HORIZONTAL, false));
+                    recycler.setAdapter(new HobbiesAdapter(ChallengeChoiceActivity.this,categoriesTitles, categoriesKeywords, editText));
+
+
+
 
                 }
             }
@@ -330,6 +319,7 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
 
             }
         });
+
     }
 
 }

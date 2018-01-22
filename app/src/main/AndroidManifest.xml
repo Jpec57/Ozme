@@ -129,6 +129,13 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <receiver android:name="MyReceiver">
+            <intent-filter>
+                <action android:name="com.tutorialspoint.CUSTOM_INTENT">
+                </action>
+            </intent-filter>
+
+        </receiver>
     </application>
 
 </manifest>

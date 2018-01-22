@@ -75,73 +75,11 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="10sp"
         android:orientation="horizontal">
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/categoriesRecycler"/>
 
-
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/humour"/>
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:src="@drawable/humour_top"/>
-            </RelativeLayout>
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/voyage"/>
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:src="@drawable/voyage_top"/>
-            </RelativeLayout>
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/gourmandise"/>
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:src="@drawable/gourmandise_top"/>
-            </RelativeLayout>
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/danse"/>
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:src="@drawable/danse_top"/>
-            </RelativeLayout>
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/emotion"/>
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:src="@drawable/emotion_top"/>
-            </RelativeLayout>
     </LinearLayout>
     </HorizontalScrollView>
 
@@ -162,13 +100,14 @@
         android:id="@+id/friendProfilePicture"
         android:layout_width="300sp"
         android:layout_gravity="center_horizontal"
+        android:layout_alignParentBottom="true"
         android:layout_height="300sp"/>
         <RelativeLayout
             android:layout_width="300sp"
-            android:layout_height="300sp"
-            android:layout_marginBottom="-2sp"
+            android:layout_height="250sp"
+            android:layout_marginBottom="50sp"
             android:id="@+id/pink"
-            android:layout_alignBottom="@id/friendProfilePicture"
+            android:layout_alignParentBottom="true"
             android:background="@drawable/pink_filter">
         <RelativeLayout
             android:layout_width="wrap_content"

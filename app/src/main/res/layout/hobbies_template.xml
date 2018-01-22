@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/img"
-            android:contentDescription="@string/todo"
-            android:src="@drawable/humour"/>
-        <ImageView
+            android:contentDescription="@string/todo"/>
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:src="@drawable/humour_top"/>
-    </RelativeLayout>
-</LinearLayout>
+            android:shadowRadius="5"
+            android:shadowDx="5"
+            android:shadowDy="5"
+            android:shadowColor="#000"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:id="@+id/text"/>
+</RelativeLayout>
