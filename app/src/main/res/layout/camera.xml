@@ -5,19 +5,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:picker="http://schemas.android.com/tools">
 <!-- LAYOUT DE FOND  -->
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/cameraPreview"/>
+
     <TextureView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:id="@+id/surface_view" />
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/papa_mariage_enzo"
+        android:contentDescription="@string/todo"
+        android:visibility="gone"
+        android:id="@+id/galleryResult"/>
     <!-- HAUT DE PAGE -->
     <ImageView
         android:layout_width="25sp"
         android:layout_height="25sp"
         android:src="@drawable/back"
+        android:contentDescription="@string/todo"
         android:id="@+id/back"
         android:layout_marginLeft="10sp"
         android:layout_marginStart="10sp"

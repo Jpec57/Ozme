@@ -1,6 +1,7 @@
 package com.ozme;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -106,6 +107,10 @@ public class CameraActivity extends AppCompatActivity {
     public FirebaseStorage firebaseStorage;
     byte[] dataByteArray;
     int currentCameraId= -1;
+    boolean hasFlash=false;
+    private static final int REQUEST_ID = 1;
+    private static final int HALF = 2;
+
 
 
 
@@ -167,7 +172,9 @@ public class CameraActivity extends AppCompatActivity {
                 back.setVisibility(View.VISIBLE);
                 findViewById(R.id.sablier).setVisibility(View.VISIBLE);
 
-                capture3.setVisibility(View.INVISIBLE);
+                capture.setVisibility(View.GONE);
+                capture2.setVisibility(View.GONE);
+                capture3.setVisibility(View.GONE);
 
                 break;
 
@@ -225,9 +232,10 @@ public class CameraActivity extends AppCompatActivity {
                     try{
                         camera.stopPreview();
                     }catch (Exception e){
-                        Intent intent = new Intent(getApplicationContext(), MainTimelineFragment.class);
-                        startActivity(intent);
+
                     }
+                    Intent intent7 = new Intent(getApplicationContext(), MainTimelineFragment.class);
+                    startActivity(intent7);
                     break;
                 case R.id.delete:
                     Intent intent=new Intent(CameraActivity.this, CameraActivity.class);
@@ -293,8 +301,14 @@ public class CameraActivity extends AppCompatActivity {
 
                     break;
                 case R.id.gallery:
+                    Intent intent1 = new Intent();
+                    intent1.setAction(Intent.ACTION_GET_CONTENT);
+                    intent1.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent1.setType("image/*");
+                    startActivityForResult(intent1, REQUEST_ID);
                     break;
                 case R.id.flash:
+                    setFlash();
                     break;
                 case R.id.capture3:
                     if (findViewById(R.id.options3).getVisibility()==View.VISIBLE){
@@ -331,12 +345,10 @@ public class CameraActivity extends AppCompatActivity {
                     break;
                 case R.id.send:
                     //TODO
-                    List<Long> test= new ArrayList<Long>(){};
-                    test.add(11111111L);
-                    test.add(1155490200L);
+                    long test = 1155490200L;
                     sendVideoPicture(test);
-                    Intent intent1=new Intent(CameraActivity.this, MainTimelineFragment.class);
-                    startActivity(intent1);
+                    Intent intent8=new Intent(CameraActivity.this, MainTimelineFragment.class);
+                    startActivity(intent8);
                     break;
                 case R.id.friends:
                     break;
@@ -645,6 +657,22 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
+    private void setFlash(){
+        if ( this.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)){
+            if (!hasFlash){
+                Camera.Parameters p = camera.getParameters();
+                p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                camera.setParameters(p);
+            }else{
+                Intent intent = new Intent(CameraActivity.this, CameraActivity.class);
+                startActivity(intent);
+            }
+
+        }
+        hasFlash = !hasFlash;
+
+    }
+
     public static boolean deleteDir(File dir) {
         if (dir != null && dir.isDirectory()) {
             String[] children = dir.list();
@@ -764,49 +792,40 @@ public class CameraActivity extends AppCompatActivity {
     }
 
 
-    private void sendVideoPicture(List<Long> friends){
+    private void sendVideoPicture(long strangerId){
         //We get the user's Id
         long persoId = Long.parseLong(Profile.getCurrentProfile().getId());
         //We build the message we have to send to the different selected users
         final ConversationActivity.Message message = new ConversationActivity.Message();
-        message.setText("Ceci est un test pour les vidéos et photos");
+        message.setText("Image/Vidéo");
         message.setType(type);
-        message.setData(encoded);
         message.setSender(persoId);
         message.setTime(time);
 
         String path="";
         String pathStorage="";
         StorageReference storageReference;
-
-        //Sending loop
-        for (int k=0; k < friends.size(); k++){
-
-            long strangerId = friends.get(k);
             if (strangerId < persoId){
                 path=strangerId+"/"+persoId;
                 pathStorage="responses/"+path+"/"+System.currentTimeMillis();
                 databaseReference=database.getReference("data/conversations/"+ path);
                 storageReference = firebaseStorage.getReference(pathStorage);
-
-
             }else{
                 path=persoId+"/"+strangerId;
                 pathStorage="responses/"+path+"/"+System.currentTimeMillis();
                 databaseReference=database.getReference("data/conversations/"+ path);
                 storageReference = firebaseStorage.getReference(pathStorage);
-
-
             }
+
             //Using Storage
             StorageMetadata metadata = new StorageMetadata.Builder()
-                    .setCustomMetadata("text", "First test with online storage")
+                    .setCustomMetadata("text", "Second test with online storage")
                     .build();
             UploadTask uploadTask = storageReference.putBytes(dataByteArray, metadata);
             uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Toast.makeText(CameraActivity.this, "Upload success", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CameraActivity.this, "Votre photo/vidéo a bien été envoyée", Toast.LENGTH_SHORT).show();
 
                     Uri url= taskSnapshot.getDownloadUrl();
                     message.setData(url.toString());
@@ -815,12 +834,12 @@ public class CameraActivity extends AppCompatActivity {
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Log.e("JPEC", e.getLocalizedMessage());
+                    Log.e("JPEC", "échec : "+e.getLocalizedMessage());
                 }
             });
 
 
-        }
+
 
     }
     private void bindingView(){
@@ -892,6 +911,44 @@ public class CameraActivity extends AppCompatActivity {
             }
         });
 
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_ID && resultCode == Activity.RESULT_OK) {
+            InputStream stream = null;
+            try {
+                stream = getContentResolver().openInputStream(data.getData());
+
+                Bitmap original = BitmapFactory.decodeStream(stream);
+                try{
+                    camera.stopPreview();
+                }catch (Exception e){
+
+                }
+                //We create a scaled bitmap in order to share quicker our original bitmap
+                Bitmap created = Bitmap.createScaledBitmap(original,
+                        original.getWidth() / HALF, original.getHeight() / HALF, true);
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                created.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+                //Don't forget to set the dataByteArray for firebase
+                dataByteArray = outputStream.toByteArray();
+
+                //Show the bitmap to the user (original)
+                ImageView imageView = (ImageView)findViewById(R.id.galleryResult);
+                imageView.setVisibility(View.VISIBLE);
+                imageView.setImageBitmap(original);
+                setView(3);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (stream != null) {
+                try {
+                    stream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
 }

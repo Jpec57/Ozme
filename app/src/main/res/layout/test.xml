@@ -1,0 +1,30 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_margin="10dip"
+        android:text="Gallery Browser Demo"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Find a Photo"
+        android:layout_gravity="center"
+        android:layout_margin="10dip"
+        android:id="@+id/browse_button" />
+
+    <ImageView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:scaleType="centerInside"
+        android:contentDescription="@string/todo"
+        android:src="@drawable/logo2"
+        android:id="@+id/image_holder"/>
+
+</LinearLayout>
