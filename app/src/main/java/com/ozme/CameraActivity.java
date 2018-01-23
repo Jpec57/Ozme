@@ -22,6 +22,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
+import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -82,7 +83,7 @@ public class CameraActivity extends AppCompatActivity {
     private static final String TAG = "Recorder";
     private TextureView mPreview;
 
-    private ImageView switcher;
+    private ImageView switcher, photoOrVideo;
     private ImageView gallery;
     private ImageView flash;
     private TextView oz;
@@ -104,6 +105,7 @@ public class CameraActivity extends AppCompatActivity {
     String type="image";
     public FirebaseStorage firebaseStorage;
     byte[] dataByteArray;
+    int currentCameraId= -1;
 
 
 
@@ -117,6 +119,7 @@ public class CameraActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.camera);
+        currentCameraId=Camera.CameraInfo.CAMERA_FACING_FRONT;
 
         //Purge cache directory
         trimCache(CameraActivity.this);
@@ -219,16 +222,19 @@ public class CameraActivity extends AppCompatActivity {
         public void onClick(View v) {
             switch (v.getId()){
                 case R.id.back:
-                    capture.setVisibility(View.VISIBLE);
-                    close.setVisibility(View.GONE);
-                    camera.startPreview();
+                    try{
+                        camera.stopPreview();
+                    }catch (Exception e){
+                        Intent intent = new Intent(getApplicationContext(), MainTimelineFragment.class);
+                        startActivity(intent);
+                    }
                     break;
                 case R.id.delete:
                     Intent intent=new Intent(CameraActivity.this, CameraActivity.class);
                     startActivity(intent);
                     break;
 
-                case R.id.switcher:
+                case R.id.photoOrVideo:
                     if (findViewById(R.id.capture).getVisibility()==View.VISIBLE){
                         findViewById(R.id.capture).setVisibility(View.GONE);
                         findViewById(R.id.capture2).setVisibility(View.VISIBLE);
@@ -244,6 +250,47 @@ public class CameraActivity extends AppCompatActivity {
                         layoutParams.addRule(RelativeLayout.ABOVE, R.id.capture);
                         findViewById(R.id.oz).setLayoutParams(layoutParams);
                     }
+                    break;
+                case R.id.switcher:
+                    try{
+                        camera.stopPreview();
+                    }catch (Exception e){
+
+                    }finally {
+                        camera.release();
+                        if(currentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK){
+                            currentCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
+                            camera = CameraHelper.getDefaultFrontFacingCameraInstance();
+                        }
+                        else {
+                            currentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
+                            camera = CameraHelper.getDefaultBackFacingCameraInstance();
+                        }
+
+                        Camera.Parameters parameters = camera.getParameters();
+                        List<Camera.Size> supportedSizes = parameters.getSupportedPictureSizes();
+                        int w = 0, h = 0;
+                        for (Camera.Size size : supportedSizes) {
+                            if (size.width > w || size.height > h) {
+                                w = size.width;
+                                h = size.height;
+                            }
+
+                        }
+                        setCameraDisplayOrientation(CameraActivity.this, currentCameraId, camera);
+
+                        parameters.setPictureSize(w, h);
+                        camera.setParameters(parameters);
+
+
+                        camera = Camera.open(currentCameraId);
+                        cameraPreviewLayout.removeView(cameraPreviewLayout.getChildAt(0));
+                        mImageSurfaceView = new ImageSurfaceView(CameraActivity.this, camera);
+                        cameraPreviewLayout.addView(mImageSurfaceView, 0);
+
+                    }
+
+
                     break;
                 case R.id.gallery:
                     break;
@@ -297,6 +344,31 @@ public class CameraActivity extends AppCompatActivity {
             }
         }
     };
+
+    public static void setCameraDisplayOrientation(AppCompatActivity activity,
+                                                   int cameraId, android.hardware.Camera camera) {
+        android.hardware.Camera.CameraInfo info =
+                new android.hardware.Camera.CameraInfo();
+        android.hardware.Camera.getCameraInfo(cameraId, info);
+        int rotation = activity.getWindowManager().getDefaultDisplay()
+                .getRotation();
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0: degrees = 0; break;
+            case Surface.ROTATION_90: degrees = 90; break;
+            case Surface.ROTATION_180: degrees = 180; break;
+            case Surface.ROTATION_270: degrees = 270; break;
+        }
+
+        int result;
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            result = (info.orientation + degrees) % 360;
+            result = (360 - result) % 360;  // compensate the mirror
+        } else {  // back-facing
+            result = (info.orientation - degrees + 360) % 360;
+        }
+        camera.setDisplayOrientation(result);
+    }
 
     private void galleryAddPic() {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
@@ -767,12 +839,14 @@ public class CameraActivity extends AppCompatActivity {
         send=(Button)findViewById(R.id.send);
         cameraPreviewLayout=(RelativeLayout)findViewById(R.id.cameraPreview);
         back=(ImageView)findViewById(R.id.back);
+        photoOrVideo = (ImageView)findViewById(R.id.photoOrVideo);
         close=(ImageView)findViewById(R.id.delete);
         numberPicker2=(HorizontalPicker)findViewById(R.id.numberPicker2);
         mPreview = (TextureView) findViewById(R.id.surface_view);
         capture = (Button)findViewById(R.id.capture);
 
 
+        photoOrVideo.setOnClickListener(onClickListener);
         switcher.setOnClickListener(onClickListener);
         flash.setOnClickListener(onClickListener);
         gallery.setOnClickListener(onClickListener);
