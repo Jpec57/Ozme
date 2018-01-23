@@ -269,17 +269,14 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             newUser.setFilter(newFilter);
             databaseReference.setValue(newUser);
         }else{
+            databaseReference.child("job").setValue(work);
             databaseReference.child("challengeTitle").addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    try{
                         dataSnapshot.getRef().setValue(test.getText().toString());
                         Intent intent = new Intent(getApplicationContext(), ProfilPerso.class);
                         startActivity(intent);
 
-                    }catch (Exception e){
-                        Log.e("HELPPPPPPP : ", e.getLocalizedMessage());
-                    }
                 }
 
                 @Override
@@ -302,15 +299,11 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
                     categoriesTitles.add(category.child("image").getValue(String.class));
                     GenericTypeIndicator<List<String>> gti = new GenericTypeIndicator<List<String>>() {};
                     categoriesKeywords.add(category.child("keywords").getValue(gti));
-                    Log.e("JPEC", categoriesTitles.get(categoriesTitles.size()-1));
                     RecyclerView recycler = (RecyclerView)findViewById(R.id.categoriesRecycler);
                     recycler.setHasFixedSize(true);
+                    recycler.setLayoutFrozen(true);
                     recycler.setLayoutManager(new LinearLayoutManager(ChallengeChoiceActivity.this, LinearLayoutManager.HORIZONTAL, false));
                     recycler.setAdapter(new HobbiesAdapter(ChallengeChoiceActivity.this,categoriesTitles, categoriesKeywords, editText));
-
-
-
-
                 }
             }
 

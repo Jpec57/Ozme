@@ -99,6 +99,7 @@ public class HobbiesAdapter extends RecyclerView.Adapter<HobbiesAdapter.ViewHold
                 listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        Toast.makeText(m_context, "Size : "+m_titles.size(), Toast.LENGTH_SHORT).show();
                         try {
                             m_editText.setText(m_keywords.get(holder.getAdapterPosition()).get(position));
                         }catch (Exception e){

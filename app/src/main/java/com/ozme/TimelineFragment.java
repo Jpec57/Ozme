@@ -16,6 +16,12 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import java.util.ArrayList;
 
 /**
@@ -126,6 +132,44 @@ public class TimelineFragment extends Fragment {
 
 
     private void TimelineFiller(){
+        //AFTER
+
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference reference = database.getReference("/data/users/");
+        reference.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                profilesId.add(Long.parseLong(dataSnapshot.getKey()));
+                imgTimeline.add(dataSnapshot.child("photos").child("0").getValue());
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                profilesId.add(Long.parseLong(dataSnapshot.getKey()));
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+
+
+
+        //BEFORE
         Long tsLong = System.currentTimeMillis()/1000;
         //TimeStamp in seconds
         currentTimestamp = tsLong.intValue();

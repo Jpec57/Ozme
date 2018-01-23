@@ -1,5 +1,8 @@
 package com.ozme;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v4.app.Fragment;
@@ -173,7 +176,6 @@ FragmentStatePagerAdapter
         int birthdayMonth=Integer.parseInt(m.toString());
         int birthdayDay=Integer.parseInt(d.toString());
         int birthdayYear=Integer.parseInt(y.toString());
-        Log.e("JPEC", "test : "+birthdayMonth);
 
         Calendar dob = Calendar.getInstance();
         Calendar today = Calendar.getInstance();
@@ -191,5 +193,26 @@ FragmentStatePagerAdapter
 
 
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        AlertDialog alertDialog;
+        final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setMessage("Voulez vous vraiment quitter l'application ?");
+        alertDialogBuilder.setPositiveButton("Oui", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        })
+                .setNegativeButton("Non", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+        alertDialog=alertDialogBuilder.create();
+        alertDialog.show();
     }
 }

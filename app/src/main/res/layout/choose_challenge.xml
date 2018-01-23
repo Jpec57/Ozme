@@ -68,19 +68,12 @@
         android:textSize="18sp"
         android:text="On vous aide avec des exemples :"/>
     <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10sp"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content">
         <android.support.v7.widget.RecyclerView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/categoriesRecycler"/>
-
-    </LinearLayout>
     </HorizontalScrollView>
 
     <TextView
