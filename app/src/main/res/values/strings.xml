@@ -21,5 +21,6 @@
     <string name="glisser_deposer">Utilisez le glisser-déposer pour déplacer vos photos</string>
     <string name="mon_profil">Mon profil</string>
     <string name="ecrire_un_message">Ecrire un message</string>
+    <string name="mon_profil_d_taill">Mon profil détaillé</string>
 
 </resources>

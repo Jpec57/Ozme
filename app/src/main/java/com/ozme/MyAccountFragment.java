@@ -128,7 +128,9 @@ public class MyAccountFragment extends Fragment {
                 case R.id.background:
                     intent= new Intent(layoutView.getContext(), ProfilPerso.class);
                     break;
-
+                case R.id.profileIcon:
+                    intent= new Intent(layoutView.getContext(), ProfilPerso.class);
+                    break;
                 default:
                     intent=null;
                     break;

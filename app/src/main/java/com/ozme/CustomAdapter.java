@@ -6,6 +6,11 @@ package com.ozme;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,13 +32,13 @@ public class CustomAdapter extends BaseAdapter {
     TextView name_age;
     TextView desc;
     TextView time;
-    ArrayList<Integer> m_imgArray;
+    ArrayList<String> m_imgArray;
     ArrayList<String> m_name_ageArray;
     ArrayList<String> m_descArray;
     ArrayList<String> m_timeArray;
     ArrayList<Long> m_profilesId;
 
-    public CustomAdapter(Context applicationContext, ArrayList<Integer> imgArray, ArrayList<String> name_ageArray, ArrayList<String> descArray, ArrayList<String> timeArray, ArrayList<Long> profilesId) {
+    public CustomAdapter(Context applicationContext, ArrayList<String> imgArray, ArrayList<String> name_ageArray, ArrayList<String> descArray, ArrayList<String> timeArray, ArrayList<Long> profilesId) {
         this.context = applicationContext;
         inflater = (LayoutInflater.from(applicationContext));
         this.m_imgArray=imgArray;
@@ -75,7 +80,10 @@ public class CustomAdapter extends BaseAdapter {
                 return myView;
             }
         });
-        sw.setImageResource(m_imgArray.get(i));
+        byte[] decodedString = Base64.decode(m_imgArray.get(i), Base64.DEFAULT);
+        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+        sw.setImageDrawable(new BitmapDrawable(context.getResources(), decodedByte) );
+        //sw.setImageResource(m_imgArray.get(i));
         name_age.setText(m_name_ageArray.get(i));
         time.setText(m_timeArray.get(i));
         desc.setText(m_descArray.get(i));

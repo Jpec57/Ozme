@@ -34,7 +34,7 @@ DOCS : http://www.truiton.com/2013/05/android-fragmentpageradapter-example/
 public class TimelineFragment extends Fragment {
     int fragNum;
     GridView simpleGrid;
-    ArrayList<Integer> imgTimeline=new ArrayList<>();
+    ArrayList<String> imgTimeline=new ArrayList<>();
     ArrayList<String> descTimeline= new ArrayList<>();
     ArrayList<String> name_ageTimeline= new ArrayList<>();
     ArrayList<String> timeTimeline = new ArrayList<>();
@@ -134,18 +134,50 @@ public class TimelineFragment extends Fragment {
     private void TimelineFiller(){
         //AFTER
 
-        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference reference = database.getReference("/data/users/");
         reference.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 profilesId.add(Long.parseLong(dataSnapshot.getKey()));
-                imgTimeline.add(dataSnapshot.child("photos").child("0").getValue());
+                imgTimeline.add(dataSnapshot.child("photos").child("0").getValue(String.class));
+                if (dataSnapshot.child("description").exists()){
+                    descTimeline.add(dataSnapshot.child("description").getValue(String.class));
+                }else{
+                    descTimeline.add("Sans description");
+                }
+                try{
+                    name_ageTimeline.add(dataSnapshot.child("username").getValue(String.class)+", "+dataSnapshot.child("filter").child("age").getValue(Integer.class));
+                }catch(Exception e){
+                    name_ageTimeline.add("Oups, 42");
+                }
+
+
+                Long tsLong = System.currentTimeMillis()/1000;
+                //TimeStamp in seconds
+                currentTimestamp = tsLong.intValue();
+                int timestamp = tsLong.intValue()-784;
+                timeTimeline.add(timestampDifference(timestamp));
+                CustomAdapter customAdapter = new CustomAdapter(layoutView.getContext(), imgTimeline, name_ageTimeline, descTimeline, timeTimeline, profilesId);
+                simpleGrid.setAdapter(customAdapter);
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
                 profilesId.add(Long.parseLong(dataSnapshot.getKey()));
+                imgTimeline.add(dataSnapshot.child("photos").child("0").getValue(String.class));
+                Long tsLong = System.currentTimeMillis()/1000;
+                //TimeStamp in seconds
+                currentTimestamp = tsLong.intValue();
+                int timestamp = tsLong.intValue()-784;
+                timeTimeline.add(timestampDifference(timestamp));
+                name_ageTimeline.add("Jean-Paul, 21");
+                descTimeline.add("Best band ever");
+
+                CustomAdapter customAdapter = new CustomAdapter(layoutView.getContext(), imgTimeline, name_ageTimeline, descTimeline, timeTimeline, profilesId);
+                simpleGrid.setAdapter(customAdapter);
+
+
 
             }
 
@@ -167,7 +199,7 @@ public class TimelineFragment extends Fragment {
 
 
 
-
+/*
 
         //BEFORE
         Long tsLong = System.currentTimeMillis()/1000;
@@ -202,6 +234,7 @@ public class TimelineFragment extends Fragment {
 
 
         }
+        */
     }
 
     private void recyclerSettings(){
