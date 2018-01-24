@@ -251,6 +251,39 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             startActivity(intent);
         }
     }
+    //TODO posssible error
+    private String getProfile_pic(){
+        Bundle params = new Bundle();
+        params.putString("fields", "id,picture.type(large)");
+        final String[] result=new String[1];
+        new GraphRequest(AccessToken.getCurrentAccessToken(), "me", params, HttpMethod.GET,
+                new GraphRequest.Callback() {
+                    @Override
+                    public void onCompleted(GraphResponse response) {
+                        if (response != null) {
+                            try {
+                                JSONObject data = response.getJSONObject();
+                                if (data.has("picture")) {
+                                    URL profilePicUrl =new URL(data.getJSONObject("picture").getJSONObject("data").getString("url"));
+                                    Bitmap profilePic= BitmapFactory.decodeStream(profilePicUrl.openConnection().getInputStream());
+
+                                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                                    profilePic.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+                                    byte[] byteArray = byteArrayOutputStream .toByteArray();
+
+                                    result[0]= Base64.encodeToString(byteArray, Base64.DEFAULT);
+
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }else{
+                            result[0]=null;
+                        }
+                    }
+                }).executeAndWait();
+        return result[0];
+    }
 
     private void firstConnection(boolean isFirstConnection){
         databaseReference=database.getReference("data/users/"+Profile.getCurrentProfile().getId());
@@ -265,6 +298,9 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             newUser.setUsername(profile.getFirstName());
             newUser.setGender(gender);
             newUser.setJob(work);
+            List<String> p = new ArrayList<>();
+            p.add(getProfile_pic());
+            newUser.setPhotos(p);
             newUser.setChallengeTitle(test.getText().toString());
             newUser.setFilter(newFilter);
             databaseReference.setValue(newUser);

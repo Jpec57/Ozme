@@ -2,7 +2,10 @@ package com.ozme;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -29,9 +32,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -40,8 +46,12 @@ import android.widget.Toast;
 import com.facebook.Profile;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
@@ -99,6 +109,7 @@ public class CameraActivity extends AppCompatActivity {
     private int time;
     private Button send;
     private TextView friends;
+    private long chosenFriend = 0L;
 
     private FirebaseDatabase database;
     private DatabaseReference databaseReference;
@@ -344,13 +355,55 @@ public class CameraActivity extends AppCompatActivity {
                     findViewById(R.id.audio_off).setVisibility(View.GONE);
                     break;
                 case R.id.send:
-                    //TODO
-                    long test = 1155490200L;
-                    sendVideoPicture(test);
+                    if (chosenFriend == 0L){
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(CameraActivity.this);
+                        dialog.setMessage("Choississez une personne à qui envoyer votre photo/vidéo");
+                        dialog.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                        dialog.show();
+                        break;
+                    }
+                    sendVideoPicture(chosenFriend);
                     Intent intent8=new Intent(CameraActivity.this, MainTimelineFragment.class);
                     startActivity(intent8);
                     break;
                 case R.id.friends:
+                    final Dialog dialog = new Dialog(CameraActivity.this);
+                    dialog.setTitle("Choissis la personne à qui tu veux envoyer cette photo/vidéo");
+                    dialog.setContentView(R.layout.list_view_prop);
+                    final ListView listView = (ListView)dialog.findViewById(R.id.listView);
+                    DatabaseReference ami = database.getReference("/data/users/"+Profile.getCurrentProfile().getId()+"/");
+                    ami.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            List<Long> items= null;
+                            if (dataSnapshot.child("messagers").exists()){
+                                GenericTypeIndicator<List<Long>> genericTypeIndicator = new GenericTypeIndicator<List<Long>>(){};
+                                items=dataSnapshot.child("messagers").getValue(genericTypeIndicator);
+                            }
+                            ArrayAdapter<Long> itemsAdapter =
+                                    new ArrayAdapter<Long>(CameraActivity.this, android.R.layout.simple_list_item_1, items);
+                            listView.setAdapter(itemsAdapter);
+                            final List<Long> finalItems = items;
+                            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                @Override
+                                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                    chosenFriend=finalItems.get(position);
+                                    dialog.dismiss();
+                                }
+                            });
+
+                        }
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+                    dialog.show();
                     break;
 
             }
@@ -663,6 +716,7 @@ public class CameraActivity extends AppCompatActivity {
                 Camera.Parameters p = camera.getParameters();
                 p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
                 camera.setParameters(p);
+
             }else{
                 Intent intent = new Intent(CameraActivity.this, CameraActivity.class);
                 startActivity(intent);
@@ -819,7 +873,7 @@ public class CameraActivity extends AppCompatActivity {
 
             //Using Storage
             StorageMetadata metadata = new StorageMetadata.Builder()
-                    .setCustomMetadata("text", "Second test with online storage")
+                    .setCustomMetadata("text", "Second chosenFriend with online storage")
                     .build();
             UploadTask uploadTask = storageReference.putBytes(dataByteArray, metadata);
             uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {

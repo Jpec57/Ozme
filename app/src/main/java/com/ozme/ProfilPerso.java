@@ -150,7 +150,7 @@ public class ProfilPerso extends AppCompatActivity {
         recycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
 
         List<String> desc = Arrays.asList("Musique", "Voyage", "Cinéma", "Cuisine", "Voyage", "Avenged");
-        int[] id = {R.drawable.travel, R.drawable.a7x, R.drawable.papa_mariage_enzo, R.drawable.gourmandise, R.drawable.travel, R.drawable.a7x};
+        int[] id = {R.drawable.goku_training, R.drawable.a7x, R.drawable.papa_mariage_enzo, R.drawable.gourmandise, R.drawable.goku_training, R.drawable.a7x};
         //Construction of the array shades
         boolean[] shades = {true, false, false, true, true, true};
         databaseReference=database.getReference("data/users");
