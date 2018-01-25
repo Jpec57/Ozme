@@ -122,10 +122,8 @@ public class CameraHelper {
             Camera.getCameraInfo(i, cameraInfo);
             if (cameraInfo.facing == position) {
                 return Camera.open(i);
-
             }
         }
-
         return null;
     }
 
@@ -155,7 +153,6 @@ public class CameraHelper {
                 return null;
             }
         }
-
         // Create a media file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
         File mediaFile;
@@ -168,8 +165,6 @@ public class CameraHelper {
         } else {
             return null;
         }
-
-
         return mediaFile;
     }
 

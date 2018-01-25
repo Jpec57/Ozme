@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.Gallery;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
@@ -25,13 +26,14 @@ import android.widget.ViewSwitcher;
 
 import java.util.ArrayList;
 
-public class CustomAdapter extends BaseAdapter {
+public class CustomAdapter extends BaseAdapter implements View.OnClickListener {
     Context context;
     LayoutInflater inflater;
     ImageSwitcher sw;
     TextView name_age;
     TextView desc;
     TextView time;
+    ImageView oz, lightning;
     ArrayList<String> m_imgArray;
     ArrayList<String> m_name_ageArray;
     ArrayList<String> m_descArray;
@@ -63,6 +65,18 @@ public class CustomAdapter extends BaseAdapter {
     @Override
     public View getView(final int i, View view, ViewGroup viewGroup) {
         view = inflater.inflate(R.layout.timeline_profile, null); // inflate the layout
+        oz=(ImageView)view.findViewById(R.id.oz);
+        lightning=(ImageView)view.findViewById(R.id.lightning);
+        oz.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, CameraActivity.class);
+                intent.putExtra("strangerId", m_profilesId.get(i));
+                context.startActivity(intent);
+            }
+        });
+        lightning.setOnClickListener(this);
+
         sw = (ImageSwitcher) view.findViewById(R.id.imageSwitcher1);
         name_age = (TextView)view.findViewById(R.id.name_age);
         time=(TextView)view.findViewById(R.id.time);
@@ -99,5 +113,13 @@ public class CustomAdapter extends BaseAdapter {
 
 
         return view;
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.lightning:
+                break;
+        }
     }
 }

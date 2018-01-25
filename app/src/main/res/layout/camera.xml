@@ -22,6 +22,11 @@
         android:contentDescription="@string/todo"
         android:visibility="gone"
         android:id="@+id/galleryResult"/>
+    <VideoView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:id="@+id/video_view"/>
     <!-- HAUT DE PAGE -->
     <ImageView
         android:layout_width="25sp"
@@ -193,7 +198,6 @@
             android:layout_height="wrap_content"
             android:background="@drawable/photo_countdown_background">
             <com.wefika.horizontalpicker.HorizontalPicker
-                xmlns:picker="http://schemas.android.com/apk/res/com.wefika.horizontalpicker"
                 android:layout_width="match_parent"
                 android:layout_height="25sp"
                 android:layout_marginTop="5sp"
@@ -208,6 +212,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="20sp"
+            android:layout_gravity="center_horizontal"
             android:layout_marginBottom="5sp"
             android:layout_marginTop="5sp"
             android:id="@+id/friends"
@@ -215,6 +220,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@color/colorPrimaryDark"
             android:textColor="@color/white"
             android:id="@+id/send"
             android:layout_gravity="center_horizontal"

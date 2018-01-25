@@ -109,7 +109,7 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="30sp"
-            android:id="@+id/heart"
+            android:id="@+id/oz"
             android:src="@drawable/oz"/>
         <ImageView
             android:layout_width="0dp"

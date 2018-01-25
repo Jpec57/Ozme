@@ -11,9 +11,13 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
 import android.graphics.Matrix;
+import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.media.AudioManager;
 import android.media.CamcorderProfile;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -42,6 +46,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.facebook.Profile;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -77,7 +82,7 @@ DOCS :
 NUMBER PICKER : https://github.com/blazsolar/HorizontalPicker
  */
 
-public class CameraActivity extends AppCompatActivity {
+public class CameraActivity extends AppCompatActivity implements MediaPlayer.OnPreparedListener{
     RelativeLayout cameraPreviewLayout;
     private ImageSurfaceView mImageSurfaceView;
     private Camera camera;
@@ -90,7 +95,7 @@ public class CameraActivity extends AppCompatActivity {
     private ProgressBar progressBar;
 
     private File mOutputFile;
-    boolean isRecording=false;
+    boolean isRecording = false;
     private static final String TAG = "Recorder";
     private TextureView mPreview;
 
@@ -113,12 +118,11 @@ public class CameraActivity extends AppCompatActivity {
 
     private FirebaseDatabase database;
     private DatabaseReference databaseReference;
-    String encoded="";
-    String type="image";
+    String type = "image";
     public FirebaseStorage firebaseStorage;
     byte[] dataByteArray;
-    int currentCameraId= -1;
-    boolean hasFlash=false;
+    int currentCameraId = -1;
+    boolean hasFlash = false;
     private static final int REQUEST_ID = 1;
     private static final int HALF = 2;
 
@@ -135,20 +139,27 @@ public class CameraActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.camera);
-        currentCameraId=Camera.CameraInfo.CAMERA_FACING_FRONT;
+        currentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
+
+        //Check if we have clicked on a "Oz" button from the timeline
+        Bundle extras = getIntent().getExtras();
+        if (extras != null){
+            chosenFriend=extras.getLong("strangerId");
+        }
 
         //Purge cache directory
         trimCache(CameraActivity.this);
 
-        progressBar=(ProgressBar)findViewById(R.id.progress_bar);
+        //TODO
+        progressBar = (ProgressBar) findViewById(R.id.progress_bar);
         progressBar.setProgress(40);
 
         bindingView();
 
     }
 
-    private void setView(int i){
-        switch(i){
+    private void setView(int i) {
+        switch (i) {
             case 1:
                 options.setVisibility(View.VISIBLE);
                 options2.setVisibility(View.GONE);
@@ -174,7 +185,7 @@ public class CameraActivity extends AppCompatActivity {
                 findViewById(R.id.sablier).setVisibility(View.GONE);
 
                 break;
-            case 3 :
+            case 3:
                 options.setVisibility(View.GONE);
                 options2.setVisibility(View.GONE);
                 options3.setVisibility(View.VISIBLE);
@@ -187,21 +198,35 @@ public class CameraActivity extends AppCompatActivity {
                 capture2.setVisibility(View.GONE);
                 capture3.setVisibility(View.GONE);
 
+                //Check whether we already have someone to whom we can send the message
+                if (chosenFriend != 0L){
+                    friends.setText(""+chosenFriend);
+                    DatabaseReference ref = database.getReference("/data/users/"+chosenFriend+"/username");
+                    ref.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            friends.setText(dataSnapshot.getValue(String.class));
+                        }
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                        }
+                    });
+                }
+
                 break;
 
         }
     }
 
-    private Camera checkDeviceCamera(){
+    private Camera checkDeviceCamera() {
         if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.CAMERA}, 50);
         }
         Camera mCamera = null;
         try {
-            mCamera = Camera.open();
+            mCamera = CameraHelper.getDefaultBackFacingCameraInstance();
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e("JPEC", e.getLocalizedMessage());
         }
         return mCamera;
     }
@@ -211,57 +236,49 @@ public class CameraActivity extends AppCompatActivity {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
             picture = BitmapFactory.decodeByteArray(data, 0, data.length);
-            if(picture==null){
-                Log.e("JPEC", "Fail in taking photo");
+            if (picture == null) {
+                Toast.makeText(CameraActivity.this, "Problème en prenant une photo", Toast.LENGTH_SHORT).show();
                 return;
             }
             picture = RotateBitmap(picture);
-            //TO DELETE
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             picture.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byte[] byteArray = stream.toByteArray();
-            dataByteArray=byteArray;
-
-            //END
-            encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
-            galleryAddPic();
+            dataByteArray = stream.toByteArray();
             camera.stopPreview();
             setView(2);
             close.setVisibility(View.VISIBLE);
-
         }
     };
-
 
 
     View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            switch (v.getId()){
+            switch (v.getId()) {
                 case R.id.back:
-                    try{
+                    try {
                         camera.stopPreview();
-                    }catch (Exception e){
+                    } catch (Exception e) {
 
                     }
                     Intent intent7 = new Intent(getApplicationContext(), MainTimelineFragment.class);
                     startActivity(intent7);
                     break;
                 case R.id.delete:
-                    Intent intent=new Intent(CameraActivity.this, CameraActivity.class);
+                    Intent intent = new Intent(CameraActivity.this, CameraActivity.class);
                     startActivity(intent);
                     break;
 
                 case R.id.photoOrVideo:
-                    if (findViewById(R.id.capture).getVisibility()==View.VISIBLE){
+                    if (findViewById(R.id.capture).getVisibility() == View.VISIBLE) {
                         findViewById(R.id.capture).setVisibility(View.GONE);
                         findViewById(R.id.capture2).setVisibility(View.VISIBLE);
                         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                         layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
                         layoutParams.addRule(RelativeLayout.ABOVE, R.id.capture2);
                         findViewById(R.id.oz).setLayoutParams(layoutParams);
-                    }else{
+                    } else {
                         findViewById(R.id.capture2).setVisibility(View.GONE);
                         findViewById(R.id.capture).setVisibility(View.VISIBLE);
                         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -271,21 +288,21 @@ public class CameraActivity extends AppCompatActivity {
                     }
                     break;
                 case R.id.switcher:
-                    try{
+                    try {
                         camera.stopPreview();
-                    }catch (Exception e){
-
-                    }finally {
                         camera.release();
-                        if(currentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK){
-                            currentCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
-                            camera = CameraHelper.getDefaultFrontFacingCameraInstance();
-                        }
-                        else {
-                            currentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
-                            camera = CameraHelper.getDefaultBackFacingCameraInstance();
-                        }
+                    } catch (Exception e) {
 
+                    }
+                    if (currentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                        currentCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
+                        camera = CameraHelper.getDefaultFrontFacingCameraInstance();
+                    } else {
+                        currentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
+                        camera = CameraHelper.getDefaultBackFacingCameraInstance();
+                    }
+
+                        /*
                         Camera.Parameters parameters = camera.getParameters();
                         List<Camera.Size> supportedSizes = parameters.getSupportedPictureSizes();
                         int w = 0, h = 0;
@@ -297,17 +314,32 @@ public class CameraActivity extends AppCompatActivity {
 
                         }
                         setCameraDisplayOrientation(CameraActivity.this, currentCameraId, camera);
-
+                        parameters.setJpegQuality(100);
+                        parameters.setJpegThumbnailQuality(100);
                         parameters.setPictureSize(w, h);
-                        camera.setParameters(parameters);
-
-
-                        camera = Camera.open(currentCameraId);
-                        cameraPreviewLayout.removeView(cameraPreviewLayout.getChildAt(0));
-                        mImageSurfaceView = new ImageSurfaceView(CameraActivity.this, camera);
-                        cameraPreviewLayout.addView(mImageSurfaceView, 0);
-
+                        camera.setParameters(parameters);*/
+                    Camera.Parameters params = camera.getParameters();
+                    List<Camera.Size> sizes = params.getSupportedPictureSizes();
+                    Camera.Size size = sizes.get(0);
+                    for (int i = 0; i < sizes.size(); i++) {
+                        if (sizes.get(i).width > size.width)
+                            size = sizes.get(i);
                     }
+                    params.setPictureSize(size.width, size.height);
+                    params.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
+                    params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                    params.setSceneMode(Camera.Parameters.SCENE_MODE_AUTO);
+                    params.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_AUTO);
+                    params.setExposureCompensation(0);
+                    params.setPictureFormat(ImageFormat.JPEG);
+                    params.setJpegQuality(100);
+                    params.setRotation(90);
+                    camera.setParameters(params);
+
+                    camera = Camera.open(currentCameraId);
+                    cameraPreviewLayout.removeView(cameraPreviewLayout.getChildAt(0));
+                    mImageSurfaceView = new ImageSurfaceView(CameraActivity.this, camera);
+                    cameraPreviewLayout.addView(mImageSurfaceView, 0);
 
 
                     break;
@@ -322,30 +354,30 @@ public class CameraActivity extends AppCompatActivity {
                     setFlash();
                     break;
                 case R.id.capture3:
-                    if (findViewById(R.id.options3).getVisibility()==View.VISIBLE){
+                    if (findViewById(R.id.options3).getVisibility() == View.VISIBLE) {
 
-                    }else{
+                    } else {
                         setView(3);
                     }
                     /*
                     Intent intent1 = new Intent(getApplicationContext(), MainTimelineFragment.class);
                     startActivity(intent1);*/
                     break;
-                case R.id.save :
-                    if (mOutputFile==null){
+                case R.id.save:
+                    if (mOutputFile == null) {
                         new fileFromBitmap().execute();
-                    }else{
-                        File mediaStorageDir=new File(Environment.getExternalStoragePublicDirectory("Ozme")+"/Ozme");
+                    } else {
+                        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory("Ozme") + "/Ozme");
 
-                        if (! mediaStorageDir.exists()){
-                            if (! mediaStorageDir.mkdirs()) {
+                        if (!mediaStorageDir.exists()) {
+                            if (!mediaStorageDir.mkdirs()) {
                                 Log.d("JPEC", "failed to create directory");
                             }
                         }
-                        moveFile(mOutputFile.getParentFile().getPath()+"/", mOutputFile.getName(),mediaStorageDir.getPath()+"/");
+                        moveFile(mOutputFile.getParentFile().getPath() + "/", mOutputFile.getName(), mediaStorageDir.getPath() + "/");
                     }
                     break;
-                    //TODO handle sound here
+                //TODO handle sound here
                 case R.id.audio_on:
                     findViewById(R.id.audio_on).setVisibility(View.GONE);
                     findViewById(R.id.audio_off).setVisibility(View.VISIBLE);
@@ -355,7 +387,7 @@ public class CameraActivity extends AppCompatActivity {
                     findViewById(R.id.audio_off).setVisibility(View.GONE);
                     break;
                 case R.id.send:
-                    if (chosenFriend == 0L){
+                    if (chosenFriend == 0L) {
                         AlertDialog.Builder dialog = new AlertDialog.Builder(CameraActivity.this);
                         dialog.setMessage("Choississez une personne à qui envoyer votre photo/vidéo");
                         dialog.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
@@ -368,36 +400,56 @@ public class CameraActivity extends AppCompatActivity {
                         break;
                     }
                     sendVideoPicture(chosenFriend);
-                    Intent intent8=new Intent(CameraActivity.this, MainTimelineFragment.class);
+                    Intent intent8 = new Intent(CameraActivity.this, MainTimelineFragment.class);
                     startActivity(intent8);
                     break;
                 case R.id.friends:
                     final Dialog dialog = new Dialog(CameraActivity.this);
                     dialog.setTitle("Choissis la personne à qui tu veux envoyer cette photo/vidéo");
                     dialog.setContentView(R.layout.list_view_prop);
-                    final ListView listView = (ListView)dialog.findViewById(R.id.listView);
-                    DatabaseReference ami = database.getReference("/data/users/"+Profile.getCurrentProfile().getId()+"/");
+                    final ListView listView = (ListView) dialog.findViewById(R.id.listView);
+                    DatabaseReference ami = database.getReference("/data/users/" + Profile.getCurrentProfile().getId() + "/messagers");
                     ami.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            List<Long> items= null;
-                            if (dataSnapshot.child("messagers").exists()){
-                                GenericTypeIndicator<List<Long>> genericTypeIndicator = new GenericTypeIndicator<List<Long>>(){};
-                                items=dataSnapshot.child("messagers").getValue(genericTypeIndicator);
-                            }
-                            ArrayAdapter<Long> itemsAdapter =
-                                    new ArrayAdapter<Long>(CameraActivity.this, android.R.layout.simple_list_item_1, items);
-                            listView.setAdapter(itemsAdapter);
-                            final List<Long> finalItems = items;
-                            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                @Override
-                                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                    chosenFriend=finalItems.get(position);
-                                    dialog.dismiss();
+                            List<Long> items = null;
+                            if (dataSnapshot.exists()) {
+                                GenericTypeIndicator<List<Long>> genericTypeIndicator = new GenericTypeIndicator<List<Long>>() {
+                                };
+                                items = dataSnapshot.getValue(genericTypeIndicator);
+                                final List<String> itemsName = new ArrayList<String>();
+                                for (int i=0; i <items.size(); i++){
+                                    DatabaseReference nameFriend = database.getReference("/data/users/"+items.get(i)+"/username");
+                                    final List<Long> finalItems = items;
+                                    nameFriend.addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                            itemsName.add(dataSnapshot.getValue(String.class));
+
+                                            ArrayAdapter<String> itemsAdapter = new ArrayAdapter<String>(CameraActivity.this, android.R.layout.simple_list_item_1, itemsName);
+                                            listView.setAdapter(itemsAdapter);
+                                            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                                @Override
+                                                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                                    chosenFriend = finalItems.get(position);
+                                                    dialog.dismiss();
+                                                }
+                                            });
+                                        }
+
+                                        @Override
+                                        public void onCancelled(DatabaseError databaseError) {
+
+                                        }
+                                    });
                                 }
-                            });
+                            }
+
+
+
 
                         }
+
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
 
@@ -419,10 +471,18 @@ public class CameraActivity extends AppCompatActivity {
                 .getRotation();
         int degrees = 0;
         switch (rotation) {
-            case Surface.ROTATION_0: degrees = 0; break;
-            case Surface.ROTATION_90: degrees = 90; break;
-            case Surface.ROTATION_180: degrees = 180; break;
-            case Surface.ROTATION_270: degrees = 270; break;
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
         }
 
         int result;
@@ -434,16 +494,6 @@ public class CameraActivity extends AppCompatActivity {
         }
         camera.setDisplayOrientation(result);
     }
-
-    private void galleryAddPic() {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                "Ozme"), "Ozme");
-        Uri contentUri = Uri.fromFile(mediaStorageDir);
-        mediaScanIntent.setData(contentUri);
-        this.sendBroadcast(mediaScanIntent);
-    }
-
 
     //VIDEO--------------------------------------------
     @Override
@@ -474,22 +524,38 @@ public class CameraActivity extends AppCompatActivity {
             //setCaptureButtonText("Capture");
             isRecording = false;
             releaseCamera();
-            setView(2);
+            setView(3);
+
+            //Video preview
+            final VideoView videoView = (VideoView)findViewById(R.id.video_view);
+            videoView.setVisibility(View.VISIBLE);
+            videoView.setVideoPath(mOutputFile.getPath());
+            videoView.start();
+            videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    videoView.start();
+                }
+            });
+            //End video preview
+
             //TODO we have to encode in base64 String the video
             new encodeVideoBase64().execute();
-
             //TODO We have to show the preview to the user
-
-            // END_INCLUDE(stop_release_media_recorder)
-
         } else {
             //Background task for preparing to capture
             new CameraActivity.MediaPrepareTask().execute(null, null, null);
 
         }
     }
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+//start playback
+    }
 
-    private void releaseMediaRecorder(){
+
+
+    private void releaseMediaRecorder() {
         if (mMediaRecorder != null) {
             // clear recorder configuration
             mMediaRecorder.reset();
@@ -501,14 +567,16 @@ public class CameraActivity extends AppCompatActivity {
             camera.lock();
         }
     }
-    private void releaseCamera(){
-        if (camera != null){
+
+    private void releaseCamera() {
+        if (camera != null) {
             // release the camera for other applications
             camera.release();
             camera = null;
         }
     }
-    private boolean prepareVideoRecorder(){
+
+    private boolean prepareVideoRecorder() {
 
         // BEGIN_INCLUDE (configure_preview)
         camera = CameraHelper.getDefaultCameraInstance();
@@ -529,7 +597,7 @@ public class CameraActivity extends AppCompatActivity {
 
         // likewise for the camera object itself.
         parameters.setPreviewSize(profile.videoFrameWidth, profile.videoFrameHeight);
-        if (parameters.getPreviewSize().width > parameters.getPreviewSize().height){
+        if (parameters.getPreviewSize().width > parameters.getPreviewSize().height) {
             camera.setDisplayOrientation(90);
         }
         camera.setParameters(parameters);
@@ -552,7 +620,7 @@ public class CameraActivity extends AppCompatActivity {
         mMediaRecorder.setCamera(camera);
 
         // Step 2: Set sources
-        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT );
+        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
         // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
@@ -566,7 +634,7 @@ public class CameraActivity extends AppCompatActivity {
         }*/
         //TODO delete the following line to save the video not in the cache
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-        mOutputFile=new File(CameraActivity.this.getCacheDir(), "OZME_VID_"+ timeStamp + ".mp4");
+        mOutputFile = new File(CameraActivity.this.getCacheDir(), "OZME_VID_" + timeStamp + ".mp4");
 
 
         //mMediaRecorder.setOutputFile(getExternalFilesDir(CameraHelper.MEDIA_TYPE_VIDEO));
@@ -617,8 +685,7 @@ public class CameraActivity extends AppCompatActivity {
 
     }
 
-    public static Bitmap RotateBitmap(Bitmap source)
-    {
+    public static Bitmap RotateBitmap(Bitmap source) {
         Matrix matrix = new Matrix();
         matrix.preRotate(90);
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
@@ -636,14 +703,14 @@ public class CameraActivity extends AppCompatActivity {
         protected String doInBackground(Void... params) {
             if (!Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
                 Log.e("JPEC", "Permission denied");
-                return  null;
+                return null;
             }
             File dir = new File(Environment.getExternalStoragePublicDirectory(
                     "Ozme"), "Ozme");
 
             // Create the storage directory if it does not exist
-            if (! dir.exists()){
-                if (! dir.mkdirs()) {
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
                     Log.e("JPEC", "failed to create directory");
                     return null;
                 }
@@ -657,10 +724,10 @@ public class CameraActivity extends AppCompatActivity {
 
             //use it to share the picture in database
             byte[] byteArray = bytes.toByteArray();
-            encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
 
             file = new File(dir.getPath() + File.separator +
-                    "OZME_IMG_"+ timeStamp + ".png");            try {
+                    "OZME_IMG_" + timeStamp + ".png");
+            try {
                 FileOutputStream fo = new FileOutputStream(file);
                 fo.write(byteArray);
                 fo.flush();
@@ -672,7 +739,7 @@ public class CameraActivity extends AppCompatActivity {
             dir.setExecutable(true);
             dir.setReadable(true);
             dir.setWritable(true);
-            MediaScannerConnection.scanFile(CameraActivity.this, new String[] {file.getPath()}, null, null);
+            MediaScannerConnection.scanFile(CameraActivity.this, new String[]{file.getPath()}, null, null);
 
             Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
             Uri fileContentUri = Uri.fromFile(dir);
@@ -699,6 +766,7 @@ public class CameraActivity extends AppCompatActivity {
 
         }
     }
+
     public static void trimCache(Context context) {
         try {
             File dir = context.getCacheDir();
@@ -710,14 +778,14 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
-    private void setFlash(){
-        if ( this.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)){
-            if (!hasFlash){
+    private void setFlash() {
+        if (this.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
+            if (!hasFlash) {
                 Camera.Parameters p = camera.getParameters();
                 p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
                 camera.setParameters(p);
 
-            }else{
+            } else {
                 Intent intent = new Intent(CameraActivity.this, CameraActivity.class);
                 startActivity(intent);
             }
@@ -749,9 +817,8 @@ public class CameraActivity extends AppCompatActivity {
         try {
 
             //create output directory if it doesn't exist
-            File dir = new File (outputPath);
-            if (!dir.exists())
-            {
+            File dir = new File(outputPath);
+            if (!dir.exists()) {
                 dir.mkdirs();
             }
 
@@ -777,7 +844,7 @@ public class CameraActivity extends AppCompatActivity {
             dir.setExecutable(true);
             dir.setReadable(true);
             dir.setWritable(true);
-            MediaScannerConnection.scanFile(this, new String[] {outputPath + inputFile}, null, null);
+            MediaScannerConnection.scanFile(this, new String[]{outputPath + inputFile}, null, null);
 
             Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
             Uri fileContentUri = Uri.fromFile(dir);
@@ -786,13 +853,9 @@ public class CameraActivity extends AppCompatActivity {
             Log.e("JPEC", dir.getPath());
 
 
-
-        }
-
-        catch (FileNotFoundException fnfe1) {
+        } catch (FileNotFoundException fnfe1) {
             Log.e("tag", fnfe1.getMessage());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             Log.e("tag", e.getMessage());
         }
         save.setVisibility(View.GONE);
@@ -802,7 +865,7 @@ public class CameraActivity extends AppCompatActivity {
 
 
     @SuppressLint("StaticFieldLeak")
-    public class encodeVideoBase64 extends AsyncTask<Void, Void, Boolean>  {
+    public class encodeVideoBase64 extends AsyncTask<Void, Void, Boolean> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -812,7 +875,7 @@ public class CameraActivity extends AppCompatActivity {
         protected Boolean doInBackground(Void... voids) {
             File file = new File(mOutputFile.getPath());
             byte[] bytesArray = new byte[(int) file.length()];
-            dataByteArray=bytesArray;
+            dataByteArray = bytesArray;
             FileInputStream fis = null;
             try {
                 fis = new FileInputStream(file);
@@ -830,10 +893,7 @@ public class CameraActivity extends AppCompatActivity {
             } catch (FileNotFoundException e) {
                 Log.e("JPEC", e.getMessage());
             }
-            //Use it to share the video in the database
-            encoded=Base64.encodeToString(bytesArray, Base64.DEFAULT);
-            type="video";
-            Log.e("JPEC", "SUCCESS");
+            type = "video";
             return null;
         }
 
@@ -846,9 +906,9 @@ public class CameraActivity extends AppCompatActivity {
     }
 
 
-    private void sendVideoPicture(long strangerId){
+    private void sendVideoPicture(final long strangerId) {
         //We get the user's Id
-        long persoId = Long.parseLong(Profile.getCurrentProfile().getId());
+        final long persoId = Long.parseLong(Profile.getCurrentProfile().getId());
         //We build the message we have to send to the different selected users
         final ConversationActivity.Message message = new ConversationActivity.Message();
         message.setText("Image/Vidéo");
@@ -856,67 +916,85 @@ public class CameraActivity extends AppCompatActivity {
         message.setSender(persoId);
         message.setTime(time);
 
-        String path="";
-        String pathStorage="";
-        StorageReference storageReference;
-            if (strangerId < persoId){
-                path=strangerId+"/"+persoId;
-                pathStorage="responses/"+path+"/"+System.currentTimeMillis();
-                databaseReference=database.getReference("data/conversations/"+ path);
-                storageReference = firebaseStorage.getReference(pathStorage);
-            }else{
-                path=persoId+"/"+strangerId;
-                pathStorage="responses/"+path+"/"+System.currentTimeMillis();
-                databaseReference=database.getReference("data/conversations/"+ path);
-                storageReference = firebaseStorage.getReference(pathStorage);
+        //Add stranger to conversation's friends of user
+        databaseReference=database.getReference("data/users/"+persoId+"/messagers");
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (!dataSnapshot.child(strangerId+"").exists()){
+                    GenericTypeIndicator<List<Long>> listGenericTypeIndicator = new GenericTypeIndicator<List<Long>>(){};
+                    List<Long> friends = dataSnapshot.getValue(listGenericTypeIndicator);
+                    friends.add(strangerId);
+                    dataSnapshot.getRef().setValue(friends);
+                }
             }
 
-            //Using Storage
-            StorageMetadata metadata = new StorageMetadata.Builder()
-                    .setCustomMetadata("text", "Second chosenFriend with online storage")
-                    .build();
-            UploadTask uploadTask = storageReference.putBytes(dataByteArray, metadata);
-            uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Toast.makeText(CameraActivity.this, "Votre photo/vidéo a bien été envoyée", Toast.LENGTH_SHORT).show();
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
 
-                    Uri url= taskSnapshot.getDownloadUrl();
-                    message.setData(url.toString());
-                    databaseReference.child(System.currentTimeMillis()+"").setValue(message);
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.e("JPEC", "échec : "+e.getLocalizedMessage());
-                }
-            });
+            }
+        });
 
+        String path = "";
+        String pathStorage = "";
+        StorageReference storageReference;
+        if (strangerId < persoId) {
+            path = strangerId + "/" + persoId;
+            pathStorage = "responses/" + path + "/" + System.currentTimeMillis();
+            databaseReference = database.getReference("data/conversations/" + path);
+            storageReference = firebaseStorage.getReference(pathStorage);
+        } else {
+            path = persoId + "/" + strangerId;
+            pathStorage = "responses/" + path + "/" + System.currentTimeMillis();
+            databaseReference = database.getReference("data/conversations/" + path);
+            storageReference = firebaseStorage.getReference(pathStorage);
+        }
 
+        //Using Storage
+        StorageMetadata metadata = new StorageMetadata.Builder()
+                .setCustomMetadata("text", "Second chosenFriend with online storage")
+                .build();
+        UploadTask uploadTask = storageReference.putBytes(dataByteArray, metadata);
+        uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Toast.makeText(CameraActivity.this, "Votre photo/vidéo a bien été envoyée", Toast.LENGTH_SHORT).show();
+
+                Uri url = taskSnapshot.getDownloadUrl();
+                message.setData(url.toString());
+                databaseReference.child(System.currentTimeMillis() + "").setValue(message);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e("JPEC", "échec : " + e.getLocalizedMessage());
+            }
+        });
 
 
     }
-    private void bindingView(){
-        switcher=(ImageView)findViewById(R.id.switcher);
-        flash=(ImageView)findViewById(R.id.flash);
-        gallery=(ImageView)findViewById(R.id.gallery);
-        options=(LinearLayout)findViewById(R.id.options);
-        options2=(LinearLayout)findViewById(R.id.options2);
-        options3=(LinearLayout)findViewById(R.id.options3);
-        oz=(TextView)findViewById(R.id.oz);
-        capture3=(Button)findViewById(R.id.capture3);
-        audio_off=(ImageView)findViewById(R.id.audio_off);
-        audio_on=(ImageView)findViewById(R.id.audio_on);
-        save=(ImageView)findViewById(R.id.save);
-        friends=(TextView)findViewById(R.id.friends);
-        send=(Button)findViewById(R.id.send);
-        cameraPreviewLayout=(RelativeLayout)findViewById(R.id.cameraPreview);
-        back=(ImageView)findViewById(R.id.back);
-        photoOrVideo = (ImageView)findViewById(R.id.photoOrVideo);
-        close=(ImageView)findViewById(R.id.delete);
-        numberPicker2=(HorizontalPicker)findViewById(R.id.numberPicker2);
+
+    private void bindingView() {
+        switcher = (ImageView) findViewById(R.id.switcher);
+        flash = (ImageView) findViewById(R.id.flash);
+        gallery = (ImageView) findViewById(R.id.gallery);
+        options = (LinearLayout) findViewById(R.id.options);
+        options2 = (LinearLayout) findViewById(R.id.options2);
+        options3 = (LinearLayout) findViewById(R.id.options3);
+        oz = (TextView) findViewById(R.id.oz);
+        capture3 = (Button) findViewById(R.id.capture3);
+        audio_off = (ImageView) findViewById(R.id.audio_off);
+        audio_on = (ImageView) findViewById(R.id.audio_on);
+        save = (ImageView) findViewById(R.id.save);
+        friends = (TextView) findViewById(R.id.friends);
+        send = (Button) findViewById(R.id.send);
+        cameraPreviewLayout = (RelativeLayout) findViewById(R.id.cameraPreview);
+        back = (ImageView) findViewById(R.id.back);
+        photoOrVideo = (ImageView) findViewById(R.id.photoOrVideo);
+        close = (ImageView) findViewById(R.id.delete);
+        numberPicker2 = (HorizontalPicker) findViewById(R.id.numberPicker2);
         mPreview = (TextureView) findViewById(R.id.surface_view);
-        capture = (Button)findViewById(R.id.capture);
+        capture = (Button) findViewById(R.id.capture);
 
 
         photoOrVideo.setOnClickListener(onClickListener);
@@ -931,7 +1009,7 @@ public class CameraActivity extends AppCompatActivity {
         friends.setOnClickListener(onClickListener);
 
 
-        final CharSequence[] values = new CharSequence[]{"0","1","2","3","4","5","6","7","8", "9", "10", "11", "12", "13", "14", "15"};
+        final CharSequence[] values = new CharSequence[]{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"};
         numberPicker2.setValues(values);
         numberPicker2.computeScroll();
         numberPicker2.setOnItemClickedListener(new HorizontalPicker.OnItemClicked() {
@@ -943,11 +1021,11 @@ public class CameraActivity extends AppCompatActivity {
         numberPicker2.setOnItemSelectedListener(new HorizontalPicker.OnItemSelected() {
             @Override
             public void onItemSelected(int index) {
-                time= Integer.parseInt(values[index].toString());
+                time = Integer.parseInt(values[index].toString());
             }
         });
 
-        database= FirebaseDatabase.getInstance();
+        database = FirebaseDatabase.getInstance();
         firebaseStorage = FirebaseStorage.getInstance();
 
 
@@ -956,7 +1034,7 @@ public class CameraActivity extends AppCompatActivity {
         camera = checkDeviceCamera();
         mImageSurfaceView = new ImageSurfaceView(this, camera);
         cameraPreviewLayout.addView(mImageSurfaceView, 0);
-        capture2=(Button)findViewById(R.id.capture2);
+        capture2 = (Button) findViewById(R.id.capture2);
         capture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -966,6 +1044,7 @@ public class CameraActivity extends AppCompatActivity {
         });
 
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_ID && resultCode == Activity.RESULT_OK) {
@@ -974,9 +1053,9 @@ public class CameraActivity extends AppCompatActivity {
                 stream = getContentResolver().openInputStream(data.getData());
 
                 Bitmap original = BitmapFactory.decodeStream(stream);
-                try{
+                try {
                     camera.stopPreview();
-                }catch (Exception e){
+                } catch (Exception e) {
 
                 }
                 //We create a scaled bitmap in order to share quicker our original bitmap
@@ -988,7 +1067,7 @@ public class CameraActivity extends AppCompatActivity {
                 dataByteArray = outputStream.toByteArray();
 
                 //Show the bitmap to the user (original)
-                ImageView imageView = (ImageView)findViewById(R.id.galleryResult);
+                ImageView imageView = (ImageView) findViewById(R.id.galleryResult);
                 imageView.setVisibility(View.VISIBLE);
                 imageView.setImageBitmap(original);
                 setView(3);

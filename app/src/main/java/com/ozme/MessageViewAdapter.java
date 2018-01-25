@@ -49,7 +49,7 @@ public class MessageViewAdapter extends BaseAdapter {
 
     static class ViewHolder {
         CircleImageView profile;
-        ImageView notif;
+        ImageView notif, delete;
         TextView date;
         TextView name_age;
         TextView desc;
@@ -86,6 +86,8 @@ public class MessageViewAdapter extends BaseAdapter {
         holder.name_age=(TextView)convertView.findViewById(R.id.name_age);
         holder.desc=(TextView)convertView.findViewById(R.id.bref);
         holder.notif=(ImageView)convertView.findViewById(R.id.notif);
+        holder.delete=(ImageView)convertView.findViewById(R.id.delete);
+
         final View finalConvertView = convertView;
 
 
@@ -111,7 +113,7 @@ public class MessageViewAdapter extends BaseAdapter {
 
             }
         });
-        long persoId = Long.parseLong(Profile.getCurrentProfile().getId());
+        final long persoId = Long.parseLong(Profile.getCurrentProfile().getId());
         Query lastQuery;
         if (persoId < conversationIds.get(position)){
             lastQuery=database.getReference("data/conversations/"+persoId+"/"+conversationIds.get(position)).limitToLast(1);
@@ -135,7 +137,6 @@ public class MessageViewAdapter extends BaseAdapter {
                                 try{
                                     if (message.getTime() != 0){
                                         dataSnapshot.getRef().removeValue();
-                                        Log.e("JPEC", "PUTAIN OUI");
                                     }
                                 }catch (Exception e){
 
@@ -177,41 +178,39 @@ public class MessageViewAdapter extends BaseAdapter {
 
             }
         });
-/*
-        lastQuery.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (Iterator<DataSnapshot> iterator = dataSnapshot.getChildren().iterator(); iterator.hasNext(); ) {
-                    DataSnapshot dataSnapshot1 = iterator.next();
-                    ConversationActivity.Message message = dataSnapshot1.getValue(ConversationActivity.Message.class);
-                    if (message != null) {
-                        holder.desc.setText(message.getText());
-                    } else {
-                        holder.desc.setText("Error");
-                    }
-                    holder.date.setText(new Date(Long.parseLong(dataSnapshot1.getKey())).toString());
-                    return;
-                }
-
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });*/
-
-
-
 
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent= new Intent(finalConvertView.getContext(), ConversationActivity.class);
                 intent.putExtra("conversationId", conversationIds.get(position));
-                intent.putExtra("circlePhoto", photo[0]);
                 finalConvertView.getContext().startActivity(intent);
+            }
+        });
+        convertView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (holder.delete.getVisibility() == View.GONE){
+                    holder.delete.setVisibility(View.VISIBLE);
+                }else{
+                    holder.delete.setVisibility(View.GONE);
+                }
+                return false;
+            }
+        });
+
+        holder.delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (persoId < conversationIds.get(position)){
+                    database.getReference("data/conversations/"+persoId+"/"+conversationIds.get(position)).removeValue();
+                }else{
+                    database.getReference("data/conversations/"+conversationIds.get(position)+"/"+persoId).removeValue();
+                }
+                database.getReference("data/users/"+persoId+"/messagers/"+position).removeValue();
+                conversationIds.remove(position);
+                notifyDataSetChanged();
+
             }
         });
         return convertView;

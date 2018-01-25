@@ -152,7 +152,6 @@ public class TimelineFragment extends Fragment {
                     name_ageTimeline.add("Oups, 42");
                 }
 
-
                 Long tsLong = System.currentTimeMillis()/1000;
                 //TimeStamp in seconds
                 currentTimestamp = tsLong.intValue();

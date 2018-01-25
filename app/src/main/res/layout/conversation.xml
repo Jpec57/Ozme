@@ -42,19 +42,22 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:background="#696969">
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/ecrire_un_message"
-            android:inputType="textCapSentences"
-            android:id="@+id/messageToSend"
-            android:textColor="#696969"
-            android:background="#ffffff"
-            android:layout_marginTop="5sp"
-            android:layout_marginStart="40sp"
-            android:layout_marginLeft="40sp"
-            android:layout_marginRight="50sp"
-            android:layout_marginEnd="50sp"/>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="40sp"
+                android:hint="@string/ecrire_un_message"
+                android:inputType="textCapSentences"
+                android:id="@+id/messageToSend"
+                android:textColor="#696969"
+                android:background="@drawable/round_layout"
+                android:layout_marginTop="5sp"
+                android:layout_marginStart="40sp"
+                android:layout_marginLeft="40sp"
+                android:layout_marginRight="50sp"
+                android:layout_marginEnd="50sp"
+/>
+
         <ImageView
             android:layout_width="30sp"
             android:layout_height="30sp"

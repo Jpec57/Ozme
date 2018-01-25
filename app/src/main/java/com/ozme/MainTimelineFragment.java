@@ -53,6 +53,9 @@ public class MainTimelineFragment extends FragmentActivity {
         viewPager.setAdapter(timelineSwiperAdapter);
         viewPager.setCurrentItem(getIntent().getIntExtra("FRAGMENT_ID", 1));
 
+        //ADDED
+        
+
         account=(ImageView)findViewById(R.id.account);
         account.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
@@ -58,7 +59,6 @@ public class ConversationActivity extends AppCompatActivity {
     long id;
     LinearLayout focusFight;
     List<String> photos;
-    String circlePhoto;
     int photosIndex=0;
     LinearLayout listViewContainer;
 
@@ -72,7 +72,6 @@ public class ConversationActivity extends AppCompatActivity {
         Intent intent= getIntent();
         database= FirebaseDatabase.getInstance();
         id=intent.getLongExtra("conversationId", 0);
-        circlePhoto=intent.getStringExtra("circlePhoto");
         getConversation(id);
 
         setPicture();
@@ -149,7 +148,11 @@ public class ConversationActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            profilePictureView.setImageDrawable(decodeFromBase64ToDrawable(photos.get(photosIndex)));
+                            try{
+                                profilePictureView.setImageDrawable(decodeFromBase64ToDrawable(photos.get(photosIndex)));
+                            }catch (IndexOutOfBoundsException i){
+                                profilePictureView.setImageDrawable(decodeFromBase64ToDrawable(photos.get(0)));
+                            }
                         }
                     });
                 }
@@ -185,7 +188,11 @@ public class ConversationActivity extends AppCompatActivity {
                 photos= dataSnapshot.getValue(photosType);
 
                 if (photos != null) {
-                    profilePictureView.setImageDrawable(decodeFromBase64ToDrawable(photos.get(photosIndex)));
+                    try{
+                        profilePictureView.setImageDrawable(decodeFromBase64ToDrawable(photos.get(photosIndex)));
+                    }catch (IndexOutOfBoundsException i){
+                        profilePictureView.setImageDrawable(decodeFromBase64ToDrawable(photos.get(0)));
+                    }
                 }else{
                     profilePictureView.setImageResource(R.drawable.logo_bright_white);
                     Toast.makeText(ConversationActivity.this, "Empty", Toast.LENGTH_SHORT).show();
@@ -213,7 +220,17 @@ public class ConversationActivity extends AppCompatActivity {
     private void getConversation (long strangerId){
         listView=(ListView)findViewById(R.id.listView);
         listView.setItemsCanFocus(false);
-        listView.setClickable(false);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                profilePictureView.setVisibility(View.VISIBLE);
+                InputMethodManager imanager = (InputMethodManager) getApplicationContext()
+                        .getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imanager != null) {
+                    imanager.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+                }
+            }
+        });
         long persoId = Long.parseLong(Profile.getCurrentProfile().getId());
         String path="";
         if (persoId < strangerId){
@@ -252,7 +269,7 @@ public class ConversationActivity extends AppCompatActivity {
                         dataSnapshot.getRef().removeValue();
                     }
 
-                    ConversationAdapter conversationAdapter = new ConversationAdapter(ConversationActivity.this, conversationMessage, decodeFromBase64ToDrawable(circlePhoto));
+                    ConversationAdapter conversationAdapter = new ConversationAdapter(ConversationActivity.this, conversationMessage);
                 listView.setAdapter(conversationAdapter);
                 scrollMyListViewToBottom(conversationAdapter);
             }

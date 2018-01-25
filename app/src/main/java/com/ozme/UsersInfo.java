@@ -152,9 +152,9 @@ public class UsersInfo {
         JSONObject preference3;
         JSONObject stats;
         String username;
-        List<Integer> messagers;
+        List<Long> messagers;
 
-        public Users(String birthday, String challengeTitle, String code, String description, Filter filter, String gender, List<Integer> hobbies, String ithink, String job, JSONObject location, List<String> photos, JSONObject preference1, JSONObject preference2, JSONObject preference3, JSONObject stats, String username, List<Integer> messagers) {
+        public Users(String birthday, String challengeTitle, String code, String description, Filter filter, String gender, List<Integer> hobbies, String ithink, String job, JSONObject location, List<String> photos, JSONObject preference1, JSONObject preference2, JSONObject preference3, JSONObject stats, String username, List<Long> messagers) {
             this.birthday = birthday;
             this.challengeTitle = challengeTitle;
             this.code = code;
@@ -183,11 +183,11 @@ public class UsersInfo {
             this.photos = photos;
         }
 
-        public List<Integer> getMessagers() {
+        public List<Long> getMessagers() {
             return messagers;
         }
 
-        public void setMessagers(List<Integer> messagers) {
+        public void setMessagers(List<Long> messagers) {
             this.messagers = messagers;
         }
 
