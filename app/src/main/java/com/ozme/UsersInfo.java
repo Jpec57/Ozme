@@ -142,19 +142,19 @@ public class UsersInfo {
         String description;
         Filter filter;
         String gender;
-        List<Integer> hobbies;
+        List<Boolean> hobbies;
         String ithink;
         String job;
         JSONObject location;
         List<String> photos;
-        JSONObject preference1;
-        JSONObject preference2;
-        JSONObject preference3;
+        int preference1;
+        int preference2;
+        int preference3;
         JSONObject stats;
         String username;
         List<Long> messagers;
 
-        public Users(String birthday, String challengeTitle, String code, String description, Filter filter, String gender, List<Integer> hobbies, String ithink, String job, JSONObject location, List<String> photos, JSONObject preference1, JSONObject preference2, JSONObject preference3, JSONObject stats, String username, List<Long> messagers) {
+        public Users(String birthday, String challengeTitle, String code, String description, Filter filter, String gender, List<Boolean> hobbies, String ithink, String job, JSONObject location, List<String> photos, int preference1, int preference2, int preference3, JSONObject stats, String username, List<Long> messagers) {
             this.birthday = birthday;
             this.challengeTitle = challengeTitle;
             this.code = code;
@@ -239,11 +239,11 @@ public class UsersInfo {
             this.gender = gender;
         }
 
-        public List<Integer> getHobbies() {
+        public List<Boolean> getHobbies() {
             return hobbies;
         }
 
-        public void setHobbies(List<Integer> hobbies) {
+        public void setHobbies(List<Boolean> hobbies) {
             this.hobbies = hobbies;
         }
 
@@ -275,27 +275,27 @@ public class UsersInfo {
             return photos;
         }
 
-        public JSONObject getPreference1() {
+        public int getPreference1() {
             return preference1;
         }
 
-        public void setPreference1(JSONObject preference1) {
+        public void setPreference1(int preference1) {
             this.preference1 = preference1;
         }
 
-        public JSONObject getPreference2() {
+        public int getPreference2() {
             return preference2;
         }
 
-        public void setPreference2(JSONObject preference2) {
+        public void setPreference2(int preference2) {
             this.preference2 = preference2;
         }
 
-        public JSONObject getPreference3() {
+        public int getPreference3() {
             return preference3;
         }
 
-        public void setPreference3(JSONObject preference3) {
+        public void setPreference3(int preference3) {
             this.preference3 = preference3;
         }
 

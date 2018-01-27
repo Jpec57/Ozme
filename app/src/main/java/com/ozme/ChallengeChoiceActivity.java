@@ -291,9 +291,9 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             UsersInfo.Users newUser = new UsersInfo.Users();
             UsersInfo.Filter newFilter = new UsersInfo.Filter();
             Profile profile = Profile.getCurrentProfile();
-            ArrayList<Integer> hobbies = new ArrayList<Integer>();
-            hobbies.add(2);
-            hobbies.add(4);
+            ArrayList<Boolean> hobbies = new ArrayList<Boolean>();
+            hobbies.add(true);
+            hobbies.add(false);
             newUser.setHobbies(hobbies);
             newUser.setUsername(profile.getFirstName());
             newUser.setGender(gender);

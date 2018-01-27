@@ -120,11 +120,5 @@ public class HobbiesAdapter extends RecyclerView.Adapter<HobbiesAdapter.ViewHold
         return m_titles.size();
     }
 
-    public void broadcastIntent(View view)
-    {
-        Intent intent = new Intent();
-        intent.setAction("com.ozme.CUSTOM_INTENT");
-        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-        m_context.sendBroadcast(intent);
-    }
+
 }

@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,10 +42,9 @@ public class MyAccountFragment extends Fragment {
     RelativeLayout background;
     FirebaseDatabase database;
     DatabaseReference databaseReference;
-    UsersInfo.Users user;
 
-    static MyAccountFragment init (int val){
-        MyAccountFragment myAccountFragment =  new MyAccountFragment();
+    static MyAccountFragment init(int val) {
+        MyAccountFragment myAccountFragment = new MyAccountFragment();
         Bundle args = new Bundle();
         args.putInt("val", val);
         myAccountFragment.setArguments(args);
@@ -62,11 +62,11 @@ public class MyAccountFragment extends Fragment {
                              Bundle savedInstanceState) {
         layoutView = inflater.inflate(R.layout.fragment_my_account, container,
                 false);
-        settings=(ImageView)layoutView.findViewById(R.id.settings);
-        add=(ImageView)layoutView.findViewById(R.id.add);
-        help=(ImageView)layoutView.findViewById(R.id.help);
-        challenge=(LinearLayout)layoutView.findViewById(R.id.challenge);
-        background=(RelativeLayout)layoutView.findViewById(R.id.background);
+        settings = (ImageView) layoutView.findViewById(R.id.settings);
+        add = (ImageView) layoutView.findViewById(R.id.add);
+        help = (ImageView) layoutView.findViewById(R.id.help);
+        challenge = (LinearLayout) layoutView.findViewById(R.id.challenge);
+        background = (RelativeLayout) layoutView.findViewById(R.id.background);
 
         //Setting onClickListener
         settings.setOnClickListener(onClickListener);
@@ -77,33 +77,30 @@ public class MyAccountFragment extends Fragment {
 
         //Adapter for notifications
         MyAccountNotificationAdapter adapter = new MyAccountNotificationAdapter(layoutView.getContext());
-        ListView listView = (ListView)layoutView.findViewById(R.id.listView);
+        ListView listView = (ListView) layoutView.findViewById(R.id.listView);
         listView.setAdapter(adapter);
 
-        profile=(ImageView)layoutView.findViewById(R.id.profile);
+        profile = (ImageView) layoutView.findViewById(R.id.profile);
         Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.papa_mariage_enzo);
         roundImage = new RoundImage(bm);
         profile.setImageDrawable(roundImage);
-        ProfilePictureView profilePictureView = (ProfilePictureView)layoutView.findViewById(R.id.circleProfile);
+        ProfilePictureView profilePictureView = (ProfilePictureView) layoutView.findViewById(R.id.circleProfile);
         profilePictureView.setProfileId(Profile.getCurrentProfile().getId());
 
 
-        challenge_text=(TextView)layoutView.findViewById(R.id.challenge_text);
-        fb_name_age=(TextView)layoutView.findViewById(R.id.fb_name_age);
+        challenge_text = (TextView) layoutView.findViewById(R.id.challenge_text);
+        fb_name_age = (TextView) layoutView.findViewById(R.id.fb_name_age);
 
-        database= FirebaseDatabase.getInstance();
-        databaseReference=database.getReference("data/users/"+ Profile.getCurrentProfile().getId());
-        databaseReference.addValueEventListener(new ValueEventListener() {
+        database = FirebaseDatabase.getInstance();
+        databaseReference = database.getReference("data/users/" + Profile.getCurrentProfile().getId());
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                user= dataSnapshot.getValue(UsersInfo.Users.class);
-                if (user != null) {
-                    challenge_text.setText(user.getChallengeTitle());
-                    UsersInfo.Filter filter = user.getFilter();
-                    String name_age=user.getUsername()+", "+filter.getAge();
-                    fb_name_age.setText(name_age);
+                challenge_text.setText(dataSnapshot.child("challengeTitle").getValue(String.class));
+                String name_age = dataSnapshot.child("username").getValue(String.class) + ", " + dataSnapshot.child("filter").child("age").getValue(Integer.class);
+                fb_name_age.setText(name_age);
 
-                }
+
             }
 
             @Override
@@ -118,26 +115,26 @@ public class MyAccountFragment extends Fragment {
         @Override
         public void onClick(View v) {
             Intent intent;
-            switch (v.getId()){
+            switch (v.getId()) {
                 case R.id.settings:
-                    intent = new Intent(layoutView.getContext(),SettingsActivity.class);
+                    intent = new Intent(layoutView.getContext(), SettingsActivity.class);
                     break;
                 case R.id.challenge:
-                    intent= new Intent(layoutView.getContext(), ChallengeChoiceActivity.class);
+                    intent = new Intent(layoutView.getContext(), ChallengeChoiceActivity.class);
                     break;
                 case R.id.background:
-                    intent= new Intent(layoutView.getContext(), ProfilPerso.class);
+                    intent = new Intent(layoutView.getContext(), ProfilPerso.class);
                     break;
                 case R.id.profileIcon:
-                    intent= new Intent(layoutView.getContext(), ProfilPerso.class);
+                    intent = new Intent(layoutView.getContext(), ProfilPerso.class);
                     break;
                 default:
-                    intent=null;
+                    intent = null;
                     break;
 
 
             }
-            if (intent != null){
+            if (intent != null) {
                 startActivity(intent);
             }
         }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="300sp"
+    android:layout_height="200sp">
+
+    <EditText
+        android:layout_width="match_parent"
+        android:hint="CEO chez Ozme"
+        android:inputType="textCapSentences"
+        android:layout_height="wrap_content"
+        android:id="@+id/editJob"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Ok"
+        android:id="@+id/clickJob"/>
+
+</LinearLayout>

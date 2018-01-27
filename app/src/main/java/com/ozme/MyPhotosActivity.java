@@ -41,6 +41,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
@@ -138,15 +139,13 @@ public class MyPhotosActivity extends AppCompatActivity {
         layout1 = (RelativeLayout)findViewById(R.id.layout1);
 
         database= FirebaseDatabase.getInstance();
-        databaseReference=database.getReference("data/users/"+ Profile.getCurrentProfile().getId());
+        databaseReference=database.getReference("data/users/"+ Profile.getCurrentProfile().getId()+"/photos");
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                user= dataSnapshot.getValue(UsersInfo.Users.class);
+                dataSnapshot.getRef().setValue(photos);
                 //We save it to firebase
                 imgLoader();
-                user.setPhotos(photos);
-                databaseReference.setValue(user);
 
             }
 
@@ -189,6 +188,12 @@ public class MyPhotosActivity extends AppCompatActivity {
         request.executeAsync();
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent intent = new Intent(MyPhotosActivity.this, ProfilPerso.class);
+        startActivity(intent);
+    }
 
     private void imgLoader() {
         photos= new ArrayList<String>();

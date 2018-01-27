@@ -22,6 +22,8 @@
         android:layout_height="0dp"
         android:layout_marginTop="10sp"
         android:layout_marginBottom="50sp"
+        android:minHeight="400sp"
+        android:orientation="vertical"
         android:focusable="true"
         android:id="@+id/listViewContainer"
         android:layout_weight="3">
@@ -29,7 +31,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:focusable="true"
+            android:minHeight="400sp"
             android:id="@+id/listView"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="15sp"/>
 
     </LinearLayout>
 

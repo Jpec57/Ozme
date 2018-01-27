@@ -115,30 +115,31 @@ public class MessageViewAdapter extends BaseAdapter {
         });
         final long persoId = Long.parseLong(Profile.getCurrentProfile().getId());
         Query lastQuery;
-        if (persoId < conversationIds.get(position)){
-            lastQuery=database.getReference("data/conversations/"+persoId+"/"+conversationIds.get(position)).limitToLast(1);
-        }else{
-            lastQuery=database.getReference("data/conversations/"+conversationIds.get(position)+"/"+persoId).limitToLast(1);
-        }
-        lastQuery.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+        try {
+            if (persoId < conversationIds.get(position)) {
+                lastQuery = database.getReference("data/conversations/" + persoId + "/" + conversationIds.get(position)).limitToLast(1);
+            } else {
+                lastQuery = database.getReference("data/conversations/" + conversationIds.get(position) + "/" + persoId).limitToLast(1);
+            }
+            lastQuery.addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                     ConversationActivity.Message message = dataSnapshot.getValue(ConversationActivity.Message.class);
                     if (message != null) {
                         holder.desc.setText(message.getText());
                         //Test if the message has been already read
                         //Is it the receiver's message ? If no, continue
-                        if (message.getSender() != Long.parseLong(Profile.getCurrentProfile().getId())){
+                        if (message.getSender() != Long.parseLong(Profile.getCurrentProfile().getId())) {
                             //What is the current data ? If not read, show the "pastille rose"
-                            if (!message.isRead()){
+                            if (!message.isRead()) {
                                 holder.notif.setVisibility(View.VISIBLE);
-                            }else{
+                            } else {
                                 holder.notif.setVisibility(View.INVISIBLE);
-                                try{
-                                    if (message.getTime() != 0){
+                                try {
+                                    if (message.getTime() != 0) {
                                         dataSnapshot.getRef().removeValue();
                                     }
-                                }catch (Exception e){
+                                } catch (Exception e) {
 
                                 }
 
@@ -149,70 +150,74 @@ public class MessageViewAdapter extends BaseAdapter {
                         holder.desc.setText("Error");
                     }
                     Date date = new Date(Long.parseLong(dataSnapshot.getKey()));
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, d MMM yyyy \nHH:mm:ss", Locale.FRANCE);
+                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, d MMM yyyy \nHH:mm:ss", Locale.FRANCE);
                     holder.date.setText(simpleDateFormat.format(date));
+
                     return;
 
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                ConversationActivity.Message message = dataSnapshot.getValue(ConversationActivity.Message.class);
-                if (message != null && message.isRead()) {
-                    holder.notif.setVisibility(View.INVISIBLE);
                 }
-            }
 
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        convertView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent= new Intent(finalConvertView.getContext(), ConversationActivity.class);
-                intent.putExtra("conversationId", conversationIds.get(position));
-                finalConvertView.getContext().startActivity(intent);
-            }
-        });
-        convertView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                if (holder.delete.getVisibility() == View.GONE){
-                    holder.delete.setVisibility(View.VISIBLE);
-                }else{
-                    holder.delete.setVisibility(View.GONE);
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                    ConversationActivity.Message message = dataSnapshot.getValue(ConversationActivity.Message.class);
+                    if (message != null && message.isRead()) {
+                        holder.notif.setVisibility(View.INVISIBLE);
+                    }
                 }
-                return false;
-            }
-        });
 
-        holder.delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (persoId < conversationIds.get(position)){
-                    database.getReference("data/conversations/"+persoId+"/"+conversationIds.get(position)).removeValue();
-                }else{
-                    database.getReference("data/conversations/"+conversationIds.get(position)+"/"+persoId).removeValue();
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+
                 }
-                database.getReference("data/users/"+persoId+"/messagers/"+position).removeValue();
-                conversationIds.remove(position);
-                notifyDataSetChanged();
 
-            }
-        });
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+            convertView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(finalConvertView.getContext(), ConversationActivity.class);
+                    intent.putExtra("conversationId", conversationIds.get(position));
+                    finalConvertView.getContext().startActivity(intent);
+                }
+            });
+            convertView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    if (holder.delete.getVisibility() == View.GONE) {
+                        holder.delete.setVisibility(View.VISIBLE);
+                    } else {
+                        holder.delete.setVisibility(View.GONE);
+                    }
+                    return false;
+                }
+            });
+
+            holder.delete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (persoId < conversationIds.get(position)) {
+                        database.getReference("data/conversations/" + persoId + "/" + conversationIds.get(position)).removeValue();
+                    } else {
+                        database.getReference("data/conversations/" + conversationIds.get(position) + "/" + persoId).removeValue();
+                    }
+                    database.getReference("data/users/" + persoId + "/messagers/" + position).removeValue();
+                    conversationIds.remove(position);
+                    notifyDataSetChanged();
+
+                }
+            });
+        }catch (NullPointerException n ){
+
+        }
         return convertView;
     }
     private Drawable decodeFromBase64ToDrawable(String encodedImage, Context context)

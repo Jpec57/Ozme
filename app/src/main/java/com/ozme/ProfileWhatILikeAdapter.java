@@ -2,33 +2,53 @@ package com.ozme;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.facebook.Profile;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ProfileWhatILikeAdapter extends RecyclerView.Adapter<ProfileWhatILikeAdapter.ViewHolder> {
     private Context m_context;
-    private List<String> m_activities_desc;
-    private int[] m_id_activities;
-    //If shaded = not liked
-    private boolean[] m_shaded;
+    private List<String> m_hobbyNames;
     SharedPreferences sharedPreferences;
+    private DatabaseReference databaseReference;
+    private FirebaseDatabase database;
+    private FirebaseStorage storage;
+    private StorageReference storageReference;
 
-    ProfileWhatILikeAdapter(Context context, List<String> activities_desc, int[] id_activities, boolean[] shaded){
-        m_activities_desc=activities_desc;
-        m_id_activities=id_activities;
-        m_shaded=shaded;
-        m_context=context;
-        sharedPreferences=m_context.getSharedPreferences("activities", Context.MODE_PRIVATE);
+    ProfileWhatILikeAdapter(Context context, List<String> hobbyNames) {
+        m_context = context;
+        m_hobbyNames = hobbyNames;
+        sharedPreferences = m_context.getSharedPreferences("activities", Context.MODE_PRIVATE);
 
-
+        database = FirebaseDatabase.getInstance();
+        databaseReference = database.getReference("data/users/" + Profile.getCurrentProfile().getId()+"/hobbies");
+        storage = FirebaseStorage.getInstance();
+        storageReference = storage.getReference("hobbies");
 
     }
 
@@ -46,8 +66,8 @@ public class ProfileWhatILikeAdapter extends RecyclerView.Adapter<ProfileWhatILi
             super(v);
             layout = v;
             activity_desc = (TextView) v.findViewById(R.id.activity_desc);
-            circleImageView = (CircleImageView)v.findViewById(R.id.activity_img);
-            gray_filter=(ImageView)v.findViewById(R.id.gray_filter);
+            circleImageView = (CircleImageView) v.findViewById(R.id.activity_img);
+            gray_filter = (ImageView) v.findViewById(R.id.gray_filter);
         }
     }
 
@@ -65,35 +85,103 @@ public class ProfileWhatILikeAdapter extends RecyclerView.Adapter<ProfileWhatILi
 
     // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(final ProfileWhatILikeAdapter.ViewHolder holder, final int position) {
-        final String activity=m_activities_desc.get(position);
-        holder.activity_desc.setText(activity);
-        holder.circleImageView.setImageResource(m_id_activities[position]);
-        if(m_shaded[position]){
-            holder.gray_filter.setVisibility(View.VISIBLE);
-        }else{
-            holder.gray_filter.setVisibility(View.INVISIBLE);
-        }
-        holder.circleImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                m_shaded[position]= !m_shaded[position];
-                if(m_shaded[position]){
-                    holder.gray_filter.setVisibility(View.VISIBLE);
-                }else{
-                    holder.gray_filter.setVisibility(View.INVISIBLE);
+    public void onBindViewHolder(final ProfileWhatILikeAdapter.ViewHolder holder, int position) {
+        try {
+            String activity = "";
+            for (int k = 0; k < m_hobbyNames.get(position).length(); k++) {
+                if (m_hobbyNames.get(position).charAt(k) == '.') {
+                    activity = m_hobbyNames.get(position).substring(0, k);
                 }
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putBoolean(position+"", m_shaded[position]);
-                editor.apply();
-
-
             }
-        });
+            holder.activity_desc.setText(activity);
+
+            storageReference.child(m_hobbyNames.get(position)).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    Picasso.with(m_context).load(uri).into(new Target() {
+                        @Override
+                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                            holder.circleImageView.setImageBitmap(bitmap);
+                        }
+
+                        @Override
+                        public void onBitmapFailed(Drawable errorDrawable) {
+
+                        }
+
+                        @Override
+                        public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                        }
+                    });
+                }
+            });
+            final boolean[] shaded = new boolean[m_hobbyNames.size()];
+            databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot index : dataSnapshot.getChildren()){
+                        try {
+                            shaded[Integer.parseInt(index.getKey())] = index.getValue(Boolean.class);
+                        }catch (NullPointerException n){
+
+                        }
+                    }
+
+
+                    //Test if shaded or not in database
+                    try {
+                        if (shaded[holder.getAdapterPosition()]) {
+                            holder.gray_filter.setVisibility(View.VISIBLE);
+                        } else {
+                            holder.gray_filter.setVisibility(View.INVISIBLE);
+                        }
+                    } catch (IndexOutOfBoundsException ioobe) {
+
+                    }
+
+                    holder.circleImageView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            shaded[holder.getAdapterPosition()]= !shaded[holder.getAdapterPosition()];
+                            if (!shaded[holder.getAdapterPosition()]) {
+                                holder.gray_filter.setVisibility(View.VISIBLE);
+                            } else {
+                                holder.gray_filter.setVisibility(View.INVISIBLE);
+                            }
+
+                            databaseReference.child(""+holder.getAdapterPosition()).addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    dataSnapshot.getRef().setValue(shaded[holder.getAdapterPosition()]);
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
+
+
+
+                        }
+                    });
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        } catch (Exception e) {
+
+        }
+
     }
 
     @Override
     public int getItemCount() {
-        return m_activities_desc.size();
+        return m_hobbyNames.size();
     }
 }

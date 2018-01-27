@@ -113,7 +113,11 @@ public class ConversationAdapter extends BaseAdapter {
             database.getReference("data/users/"+message.getSender()+"/photos/0").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    drawable=decodeFromBase64ToDrawable(dataSnapshot.getValue(String.class));
+                    try {
+                        drawable = decodeFromBase64ToDrawable(dataSnapshot.getValue(String.class));
+                    }catch (NullPointerException n){
+
+                    }
                 }
 
                 @Override

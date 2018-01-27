@@ -89,7 +89,11 @@ public class ConversationActivity extends AppCompatActivity {
                 listView.smoothScrollBy(0,400);
                 if (hasFocus){
                     profilePictureView.setVisibility(View.GONE);
-                    listView.setSelection(listView.getAdapter().getCount() - 1);
+                    try {
+                        listView.setSelection(listView.getAdapter().getCount() - 1);
+                    }catch (NullPointerException n){
+
+                    }
                     LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
                     layoutParams.setMargins(0,0,0,200);
                     listViewContainer.setLayoutParams(layoutParams);

@@ -1,15 +1,18 @@
 package com.ozme;
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -27,6 +30,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -78,6 +83,7 @@ public class ProfilPerso extends AppCompatActivity {
         setSeekBar();
 
         activityRecycler();
+        setData();
 
 
 
@@ -141,42 +147,21 @@ public class ProfilPerso extends AppCompatActivity {
     }
 
     private void activityRecycler(){
-        RecyclerView recycler = (RecyclerView)findViewById(R.id.recycler);
-        // use this setting to
-        // improve performance if you know that changes
-        // in content do not change the layout size
-        // of the RecyclerView
-        recycler.setHasFixedSize(true);
-        recycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
 
-        List<String> desc = Arrays.asList("Musique", "Voyage", "Cinéma", "Cuisine", "Voyage", "Avenged");
-        int[] id = {R.drawable.goku_training, R.drawable.a7x, R.drawable.papa_mariage_enzo, R.drawable.gourmandise, R.drawable.goku_training, R.drawable.a7x};
-        //Construction of the array shades
-        boolean[] shades = {true, false, false, true, true, true};
-        databaseReference=database.getReference("data/users");
-        for (int k=0; k<desc.size(); k++){
-            shades[k]=sharedPreferences2.getBoolean(k+"", true);
-        }
-        final List<Integer> hobby = new ArrayList<>();
-        for (boolean shade : shades) {
-            if (shade) {
-                hobby.add(shade ? 1 : 0);
-            }
-        }
-        //TODO
-        /*
+
+        final ArrayList<String> imgHobbyList=new ArrayList<String>();
+        databaseReference=database.getReference("data/hobbies");
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Toast.makeText(getApplicationContext(), dataSnapshot.getValue().toString(), Toast.LENGTH_SHORT).show();
-                UsersInfo.Users users=dataSnapshot.child(Profile.getCurrentProfile().getId()).getValue(UsersInfo.Users.class);
-                try{
-                    users.setHobbies(hobby);
-                    databaseReference.child(Profile.getCurrentProfile().getId()).setValue(users);
-                }catch (Exception e){
-                    Toast.makeText(getApplicationContext(), "Error", Toast.LENGTH_SHORT).show();
-                }
+                for (DataSnapshot hobby : dataSnapshot.getChildren()){
+                    imgHobbyList.add(hobby.child("image").getValue(String.class));
+                    RecyclerView recycler = (RecyclerView)findViewById(R.id.recycler);
+                    recycler.setHasFixedSize(true);
+                    recycler.setLayoutManager(new LinearLayoutManager(ProfilPerso.this, LinearLayoutManager.HORIZONTAL, false));
+                    recycler.setAdapter(new ProfileWhatILikeAdapter(ProfilPerso.this,imgHobbyList));
 
+                }
             }
 
             @Override
@@ -184,10 +169,26 @@ public class ProfilPerso extends AppCompatActivity {
 
             }
         });
-*/
+        databaseReference = database.getReference("data/users/"+Profile.getCurrentProfile().getId()+"/hobbies");
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot index : dataSnapshot.getChildren()){
+                    /*
+                    try {
+                        shaded[Integer.parseInt(index.getKey())] = index.getValue(Boolean.class);
+                    }catch (NullPointerException n){
 
+                    }
+                    */
+                }
+            }
 
-        recycler.setAdapter(new ProfileWhatILikeAdapter(this, desc, id, shades));
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void saveSeekBars(int seekbar, int progress){
@@ -199,10 +200,49 @@ public class ProfilPerso extends AppCompatActivity {
         seekBar1=(SeekBar)findViewById(R.id.seekBar1);
         seekBar2=(SeekBar)findViewById(R.id.seekBar2);
         seekBar3=(SeekBar)findViewById(R.id.seekBar3);
-        seekBar1.setProgress(sharedPreferences.getInt(seekBar1.getId()+"", 0));
-        seekBar2.setProgress(sharedPreferences.getInt(seekBar2.getId()+"", 0));
-        seekBar3.setProgress(sharedPreferences.getInt(seekBar3.getId()+"", 0));
+        seekBar1.setTag("1");
+        seekBar2.setTag("2");
+        seekBar3.setTag("3");
 
+        database.getReference("data/users/"+Profile.getCurrentProfile().getId()+"/preference1").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()){
+                    seekBar1.setProgress(dataSnapshot.getValue(Integer.class));
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        database.getReference("data/users/"+Profile.getCurrentProfile().getId()+"/preference2").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()){
+                    seekBar2.setProgress(dataSnapshot.getValue(Integer.class));
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        database.getReference("data/users/"+Profile.getCurrentProfile().getId()+"/preference3").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()){
+                    seekBar3.setProgress(dataSnapshot.getValue(Integer.class));
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
 
         SeekBar.OnSeekBarChangeListener onSeekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
@@ -217,9 +257,19 @@ public class ProfilPerso extends AppCompatActivity {
             }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+            public void onStopTrackingTouch(final SeekBar seekBar) {
                 //Save now
-                saveSeekBars(seekBar.getId(), seekBar.getProgress());
+                database.getReference("data/users/"+Profile.getCurrentProfile().getId()+"/preference"+seekBar.getTag().toString()).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        dataSnapshot.getRef().setValue(seekBar.getProgress());
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
             }
         };
         seekBar1.setOnSeekBarChangeListener(onSeekBarChangeListener);
@@ -236,8 +286,7 @@ public class ProfilPerso extends AppCompatActivity {
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String name_age = sharedPreferences.getString("first_name", "Julie")+", "+dataSnapshot.getValue().toString();
-                //name_age=name_age+", "+sharedPreferences.getString("birthday", "28");
+                String name_age = sharedPreferences.getString("first_name", "None")+", "+dataSnapshot.getValue().toString();
                 fb_name_age.setText(name_age);
 
             }
@@ -249,7 +298,56 @@ public class ProfilPerso extends AppCompatActivity {
         });
 
 
-        //END
+    }
+    private void setData(){
+        final TextView job = (TextView)findViewById(R.id.job);
+        database.getReference("data/users/"+Profile.getCurrentProfile().getId()+"/job").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()){
+                    job.setText(dataSnapshot.getValue(String.class));
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        LinearLayout changeJob = (LinearLayout)findViewById(R.id.changeJob);
+        changeJob.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Dialog dialog = new Dialog(ProfilPerso.this);
+                dialog.setTitle("Votre nouveau poste");
+                dialog.setContentView(R.layout.dialog_change_job);
+                final EditText editJob= (EditText)dialog.findViewById(R.id.editJob);
+                Button clickJob=(Button)dialog.findViewById(R.id.clickJob);
+                clickJob.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        job.setText(editJob.getText().toString());
+                        database.getReference("data/users/"+Profile.getCurrentProfile().getId()+"/job").addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                dataSnapshot.getRef().setValue(editJob.getText().toString());
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+                    }
+                });
+
+                dialog.show();
+            }
+        });
+
+
     }
 
     private void pageLayout(){
