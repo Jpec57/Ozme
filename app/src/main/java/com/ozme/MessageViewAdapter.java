@@ -38,7 +38,7 @@ import java.util.Locale;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 /**
- * Created by jpec on 11/01/18.
+ * If we delete a node, we have to exchange the last user in the list with the one that has been deleted to avoid error while converting list
  */
 
 public class MessageViewAdapter extends BaseAdapter {
@@ -152,7 +152,6 @@ public class MessageViewAdapter extends BaseAdapter {
                     Date date = new Date(Long.parseLong(dataSnapshot.getKey()));
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, d MMM yyyy \nHH:mm:ss", Locale.FRANCE);
                     holder.date.setText(simpleDateFormat.format(date));
-
                     return;
 
                 }
@@ -209,9 +208,22 @@ public class MessageViewAdapter extends BaseAdapter {
                     } else {
                         database.getReference("data/conversations/" + conversationIds.get(position) + "/" + persoId).removeValue();
                     }
-                    database.getReference("data/users/" + persoId + "/messagers/" + position).removeValue();
-                    conversationIds.remove(position);
-                    notifyDataSetChanged();
+                    DatabaseReference countMessagers = database.getReference("data/users/"+persoId+"/messagers");
+                    countMessagers.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            GenericTypeIndicator<List<Long>> genericTypeIndicator = new GenericTypeIndicator<List<Long>>(){};
+                            List<Long> formerFriends = dataSnapshot.getValue(genericTypeIndicator);
+                            formerFriends.remove(position);
+                            dataSnapshot.getRef().setValue(formerFriends);
+                            notifyDataSetChanged();
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
 
                 }
             });

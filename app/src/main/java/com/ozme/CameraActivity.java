@@ -301,23 +301,6 @@ public class CameraActivity extends AppCompatActivity implements MediaPlayer.OnP
                         currentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
                         camera = CameraHelper.getDefaultBackFacingCameraInstance();
                     }
-
-                        /*
-                        Camera.Parameters parameters = camera.getParameters();
-                        List<Camera.Size> supportedSizes = parameters.getSupportedPictureSizes();
-                        int w = 0, h = 0;
-                        for (Camera.Size size : supportedSizes) {
-                            if (size.width > w || size.height > h) {
-                                w = size.width;
-                                h = size.height;
-                            }
-
-                        }
-                        setCameraDisplayOrientation(CameraActivity.this, currentCameraId, camera);
-                        parameters.setJpegQuality(100);
-                        parameters.setJpegThumbnailQuality(100);
-                        parameters.setPictureSize(w, h);
-                        camera.setParameters(parameters);*/
                     Camera.Parameters params = camera.getParameters();
                     List<Camera.Size> sizes = params.getSupportedPictureSizes();
                     Camera.Size size = sizes.get(0);
@@ -417,16 +400,17 @@ public class CameraActivity extends AppCompatActivity implements MediaPlayer.OnP
                                 GenericTypeIndicator<List<Long>> genericTypeIndicator = new GenericTypeIndicator<List<Long>>() {
                                 };
                                 items = dataSnapshot.getValue(genericTypeIndicator);
-                                final List<String> itemsName = new ArrayList<String>();
+                                final String[] itemsName2 = new String[items.size()];
                                 for (int i=0; i <items.size(); i++){
+                                    final int iFinal = i;
                                     DatabaseReference nameFriend = database.getReference("/data/users/"+items.get(i)+"/username");
                                     final List<Long> finalItems = items;
                                     nameFriend.addListenerForSingleValueEvent(new ValueEventListener() {
                                         @Override
                                         public void onDataChange(DataSnapshot dataSnapshot) {
-                                            itemsName.add(dataSnapshot.getValue(String.class));
+                                            itemsName2[iFinal]=dataSnapshot.getValue(String.class);
 
-                                            ArrayAdapter<String> itemsAdapter = new ArrayAdapter<String>(CameraActivity.this, android.R.layout.simple_list_item_1, itemsName);
+                                            ArrayAdapter<String> itemsAdapter = new ArrayAdapter<String>(CameraActivity.this, android.R.layout.simple_list_item_1, itemsName2);
                                             listView.setAdapter(itemsAdapter);
                                             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                                                 @Override
@@ -921,12 +905,16 @@ public class CameraActivity extends AppCompatActivity implements MediaPlayer.OnP
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (!dataSnapshot.child(strangerId+"").exists()){
-                    GenericTypeIndicator<List<Long>> listGenericTypeIndicator = new GenericTypeIndicator<List<Long>>(){};
-                    List<Long> friends = dataSnapshot.getValue(listGenericTypeIndicator);
-                    friends.add(strangerId);
-                    dataSnapshot.getRef().setValue(friends);
+                for (DataSnapshot i : dataSnapshot.getChildren()){
+                    if (i.child(""+strangerId).exists()){
+                        GenericTypeIndicator<List<Long>> listGenericTypeIndicator = new GenericTypeIndicator<List<Long>>(){};
+                        List<Long> friends = dataSnapshot.getValue(listGenericTypeIndicator);
+                        friends.add(strangerId);
+                        dataSnapshot.getRef().setValue(friends);
+                    }
                 }
+                return;
+
             }
 
             @Override
@@ -959,9 +947,12 @@ public class CameraActivity extends AppCompatActivity implements MediaPlayer.OnP
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Toast.makeText(CameraActivity.this, "Votre photo/vidéo a bien été envoyée", Toast.LENGTH_SHORT).show();
-
                 Uri url = taskSnapshot.getDownloadUrl();
-                message.setData(url.toString());
+                try {
+                    message.setData(url.toString());
+                }catch (Exception e){
+                    Log.e("JPEC", "toString bug");
+                }
                 databaseReference.child(System.currentTimeMillis() + "").setValue(message);
             }
         }).addOnFailureListener(new OnFailureListener() {

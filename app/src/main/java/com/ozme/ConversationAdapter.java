@@ -222,6 +222,7 @@ public class ConversationAdapter extends BaseAdapter {
     }
 
     private void isVideo(View convertView, ConversationActivity.Message message) {
+        Log.e("JPEC", "Début isVideo");
         //Make the video layout visible
         LinearLayout imgContainer = (LinearLayout) convertView.findViewById(R.id.imgContainer);
         imgContainer.setVisibility(View.VISIBLE);
@@ -240,8 +241,8 @@ public class ConversationAdapter extends BaseAdapter {
             storageReference.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                    Log.e("JPEC", "Success download isVideo");
                     // Local temp file has been created
-                    Log.e("JPEC", "HELLO");
                     video.setVideoPath(finalLocalFile.getPath());
                     video.start();
 
