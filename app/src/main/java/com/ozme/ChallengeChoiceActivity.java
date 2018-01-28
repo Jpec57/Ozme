@@ -297,6 +297,13 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             newUser.setHobbies(hobbies);
             newUser.setUsername(profile.getFirstName());
             newUser.setGender(gender);
+            if (gender.equals("male")){
+                newFilter.setHomme(false);
+                newFilter.setFemme(true);
+            }else{
+                newFilter.setFemme(false);
+                newFilter.setHomme(true);
+            }
             newUser.setJob(work);
             List<String> p = new ArrayList<>();
             p.add(getProfile_pic());

@@ -16,11 +16,13 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.facebook.Profile;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
@@ -32,6 +34,7 @@ DOCS : http://www.truiton.com/2013/05/android-fragmentpageradapter-example/
  */
 
 public class TimelineFragment extends Fragment {
+    FirebaseDatabase database;
     int fragNum;
     GridView simpleGrid;
     ArrayList<String> imgTimeline=new ArrayList<>();
@@ -134,50 +137,52 @@ public class TimelineFragment extends Fragment {
     private void TimelineFiller(){
         //AFTER
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference reference = database.getReference("/data/users/");
+        database = FirebaseDatabase.getInstance();
+        database.getReference("/data/users/"+Profile.getCurrentProfile().getId()+"/filter").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                //Want to find a male or a female
+                if (dataSnapshot.child("homme").getValue(Boolean.class)&&dataSnapshot.child("femme").getValue(Boolean.class)){
+                    timelineFilter(true, true);
+                }else {
+                    //Want to find a male
+                    if (dataSnapshot.child("homme").getValue(Boolean.class)){
+                        timelineFilter(true, false);
+                    }else{
+                        timelineFilter(false, true);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void timelineFilter(final boolean homme,final boolean femme){
+        final DatabaseReference reference = database.getReference("/data/users/");
         reference.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                profilesId.add(Long.parseLong(dataSnapshot.getKey()));
-                imgTimeline.add(dataSnapshot.child("photos").child("0").getValue(String.class));
-                if (dataSnapshot.child("description").exists()){
-                    descTimeline.add(dataSnapshot.child("description").getValue(String.class));
+                if (homme && femme){
+                    filler(dataSnapshot);
+                }else if (homme){
+                    if (dataSnapshot.child("gender").getValue(String.class).equals("male")){
+                        filler(dataSnapshot);
+                    }
                 }else{
-                    descTimeline.add("Sans description");
-                }
-                try{
-                    name_ageTimeline.add(dataSnapshot.child("username").getValue(String.class)+", "+dataSnapshot.child("filter").child("age").getValue(Integer.class));
-                }catch(Exception e){
-                    name_ageTimeline.add("Oups, 42");
+                    if (!dataSnapshot.child("gender").getValue(String.class).equals("male")){
+                        filler(dataSnapshot);
+                    }
+
                 }
 
-                Long tsLong = System.currentTimeMillis()/1000;
-                //TimeStamp in seconds
-                currentTimestamp = tsLong.intValue();
-                int timestamp = tsLong.intValue()-784;
-                timeTimeline.add(timestampDifference(timestamp));
-                CustomAdapter customAdapter = new CustomAdapter(layoutView.getContext(), imgTimeline, name_ageTimeline, descTimeline, timeTimeline, profilesId);
-                simpleGrid.setAdapter(customAdapter);
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                profilesId.add(Long.parseLong(dataSnapshot.getKey()));
-                imgTimeline.add(dataSnapshot.child("photos").child("0").getValue(String.class));
-                Long tsLong = System.currentTimeMillis()/1000;
-                //TimeStamp in seconds
-                currentTimestamp = tsLong.intValue();
-                int timestamp = tsLong.intValue()-784;
-                timeTimeline.add(timestampDifference(timestamp));
-                name_ageTimeline.add("Jean-Paul, 21");
-                descTimeline.add("Best band ever");
-
-                CustomAdapter customAdapter = new CustomAdapter(layoutView.getContext(), imgTimeline, name_ageTimeline, descTimeline, timeTimeline, profilesId);
-                simpleGrid.setAdapter(customAdapter);
-
-
-
             }
 
             @Override
@@ -195,45 +200,30 @@ public class TimelineFragment extends Fragment {
 
             }
         });
+    }
 
+    private void filler(DataSnapshot dataSnapshot){
 
+        profilesId.add(Long.parseLong(dataSnapshot.getKey()));
+        imgTimeline.add(dataSnapshot.child("photos").child("0").getValue(String.class));
+        if (dataSnapshot.child("description").exists()){
+            descTimeline.add(dataSnapshot.child("description").getValue(String.class));
+        }else{
+            descTimeline.add("Sans description");
+        }
+        try{
+            name_ageTimeline.add(dataSnapshot.child("username").getValue(String.class)+", "+dataSnapshot.child("filter").child("age").getValue(Integer.class));
+        }catch(Exception e){
+            name_ageTimeline.add("Oups, 42");
+        }
 
-/*
-
-        //BEFORE
         Long tsLong = System.currentTimeMillis()/1000;
         //TimeStamp in seconds
         currentTimestamp = tsLong.intValue();
-        int timestamp = tsLong.intValue();
-
-        for (int k=0; k < 5; k++){
-            imgTimeline.add(R.drawable.goku_training);
-            imgTimeline.add(R.drawable.a7x);
-            imgTimeline.add(R.drawable.papa_mariage_enzo);
-
-            descTimeline.add("A little monkey boy");
-            descTimeline.add("Best band ever");
-            descTimeline.add("Familly");
-
-            timestamp-=60;
-            timeTimeline.add(timestampDifference(timestamp));
-            timestamp-=160;
-            timeTimeline.add(timestampDifference(timestamp));
-            timestamp-=(60*60*2);
-            timeTimeline.add(timestampDifference(timestamp));
-
-            name_ageTimeline.add("Jean-Paul, 21");
-            name_ageTimeline.add("Aline, 18");
-            name_ageTimeline.add("Maxime, 28");
-
-            profilesId.add((long) 1151181962);
-            profilesId.add(269506396723510L);
-            profilesId.add(1122624547763740L);
-
-
-
-        }
-        */
+        int timestamp = tsLong.intValue()-784;
+        timeTimeline.add(timestampDifference(timestamp));
+        CustomAdapter customAdapter = new CustomAdapter(layoutView.getContext(), imgTimeline, name_ageTimeline, descTimeline, timeTimeline, profilesId);
+        simpleGrid.setAdapter(customAdapter);
     }
 
     private void recyclerSettings(){
