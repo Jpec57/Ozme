@@ -141,15 +141,18 @@ public class TimelineFragment extends Fragment {
         database.getReference("/data/users/"+Profile.getCurrentProfile().getId()+"/filter").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                int ageMin=dataSnapshot.child("ageMin").getValue(Integer.class);
+                int ageMax=dataSnapshot.child("ageMax").getValue(Integer.class);
+
                 //Want to find a male or a female
                 if (dataSnapshot.child("homme").getValue(Boolean.class)&&dataSnapshot.child("femme").getValue(Boolean.class)){
-                    timelineFilter(true, true);
+                    timelineFilter(true, true, ageMin, ageMax);
                 }else {
                     //Want to find a male
                     if (dataSnapshot.child("homme").getValue(Boolean.class)){
-                        timelineFilter(true, false);
+                        timelineFilter(true, false, ageMin, ageMax);
                     }else{
-                        timelineFilter(false, true);
+                        timelineFilter(false, true, ageMin, ageMax);
                     }
                 }
             }
@@ -161,24 +164,24 @@ public class TimelineFragment extends Fragment {
         });
     }
 
-    private void timelineFilter(final boolean homme,final boolean femme){
+    private void timelineFilter(final boolean homme, final boolean femme, final int ageMin, final int ageMax){
         final DatabaseReference reference = database.getReference("/data/users/");
         reference.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                if (homme && femme){
-                    filler(dataSnapshot);
-                }else if (homme){
-                    if (dataSnapshot.child("gender").getValue(String.class).equals("male")){
-                        filler(dataSnapshot);
-                    }
-                }else{
-                    if (!dataSnapshot.child("gender").getValue(String.class).equals("male")){
-                        filler(dataSnapshot);
-                    }
+                int age=18;
+                try{
+                    age = dataSnapshot.child("filter").child("age").getValue(Integer.class);
+                }catch (Exception e){
 
                 }
-
+                if (ageMax != 0 || ageMin != 0){
+                    if (age >= ageMin && age <= ageMax ){
+                        fillerAfterAge(homme, femme, dataSnapshot);
+                    }
+                }else{
+                    fillerAfterAge(homme, femme, dataSnapshot);
+                }
             }
 
             @Override
@@ -200,6 +203,20 @@ public class TimelineFragment extends Fragment {
 
             }
         });
+    }
+
+    private void fillerAfterAge(boolean homme, boolean femme, DataSnapshot dataSnapshot){
+        if (homme && femme){
+            filler(dataSnapshot);
+        }else if (homme){
+            if (dataSnapshot.child("gender").getValue(String.class).equals("male")){
+                filler(dataSnapshot);
+            }
+        }else{
+            if (!dataSnapshot.child("gender").getValue(String.class).equals("male")){
+                filler(dataSnapshot);
+            }
+        }
     }
 
     private void filler(DataSnapshot dataSnapshot){
