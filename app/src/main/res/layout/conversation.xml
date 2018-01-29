@@ -32,6 +32,8 @@
             android:layout_height="wrap_content"
             android:focusable="true"
             android:minHeight="400sp"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="10.0sp"
             android:id="@+id/listView"/>
         <View
             android:layout_width="match_parent"

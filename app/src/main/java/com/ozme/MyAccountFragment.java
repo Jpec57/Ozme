@@ -35,7 +35,7 @@ public class MyAccountFragment extends Fragment {
     private ImageView profile;
     RoundImage roundImage;
     TextView challenge_text, fb_name_age;
-    ImageView settings;
+    ImageView settings, profileIcon;
     ImageView add;
     ImageView help;
     LinearLayout challenge;
@@ -67,6 +67,7 @@ public class MyAccountFragment extends Fragment {
         help = (ImageView) layoutView.findViewById(R.id.help);
         challenge = (LinearLayout) layoutView.findViewById(R.id.challenge);
         background = (RelativeLayout) layoutView.findViewById(R.id.background);
+        profileIcon=(ImageView)layoutView.findViewById(R.id.profileIcon);
 
         //Setting onClickListener
         settings.setOnClickListener(onClickListener);
@@ -74,6 +75,7 @@ public class MyAccountFragment extends Fragment {
         help.setOnClickListener(onClickListener);
         challenge.setOnClickListener(onClickListener);
         background.setOnClickListener(onClickListener);
+        profileIcon.setOnClickListener(onClickListener);
 
         //Adapter for notifications
         MyAccountNotificationAdapter adapter = new MyAccountNotificationAdapter(layoutView.getContext());

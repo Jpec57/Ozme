@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Base64;
@@ -34,6 +35,12 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
+import com.volokh.danylo.video_player_manager.manager.PlayerItemChangeListener;
+import com.volokh.danylo.video_player_manager.manager.SingleVideoPlayerManager;
+import com.volokh.danylo.video_player_manager.manager.VideoPlayerManager;
+import com.volokh.danylo.video_player_manager.meta.MetaData;
+import com.volokh.danylo.video_player_manager.ui.SimpleMainThreadMediaPlayerListener;
+import com.volokh.danylo.video_player_manager.ui.VideoPlayerView;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,6 +66,7 @@ public class ConversationAdapter extends BaseAdapter {
     Drawable drawable;
     public FirebaseStorage firebaseStorage;
     public StorageReference storageReference;
+    boolean firstTime=true;
 
 
     public ConversationAdapter(Context applicationContext, ArrayList<ConversationActivity.Message> conversationMessage) {
@@ -98,7 +106,13 @@ public class ConversationAdapter extends BaseAdapter {
                 if (type.equals("image")) {
                     isImage(convertView, message, messageText, false);
                 } else {
-                    isVideo(convertView, message);
+                    //Last one immediatly shown
+                    if (position == m_conversationMessage.size()-1){
+                        showDialog(message.getType(), message.getData(), message.getTime());
+                    }else{
+                        //Have to click on the picture first
+                        isVideo(convertView, message);
+                    }
                 }
 
             }
@@ -133,7 +147,8 @@ public class ConversationAdapter extends BaseAdapter {
                 if (type.equals("image")) {
                     isImage(convertView, message, messageText, true);
                 } else {
-                    isVideo(convertView, message);
+                    //if (m_conversationMessage.size()-1 == position)
+                    //isVideo(convertView, message);
                 }
 
 
@@ -148,7 +163,7 @@ public class ConversationAdapter extends BaseAdapter {
         return new BitmapDrawable(m_context.getResources(), BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
     }
 
-    private void showDialog(String type, String data, final int time) {
+    private void showDialog(String type, final String data, final int time) {
         final Dialog dialog = new Dialog(m_context);
         dialog.setContentView(R.layout.dialog_show_oz);
         dialog.setTitle("Oz - Réponse au défi");
@@ -156,33 +171,28 @@ public class ConversationAdapter extends BaseAdapter {
         final ImageView imageView = (ImageView) dialog.findViewById(R.id.img);
         if (type.equals("video")) {
             final VideoView videoView = (VideoView) dialog.findViewById(R.id.video);
-            videoView.setVisibility(View.VISIBLE);
             imageView.setVisibility(View.GONE);
             storageReference = firebaseStorage.getReferenceFromUrl(data);
-            // Load the image using Glide
             storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
-                public void onSuccess(Uri uri) {
+                public void onSuccess(final Uri uri) {
+                    videoView.setVisibility(View.VISIBLE);
                     videoView.setVideoURI(uri);
-                    try {
-                        new android.os.Handler().postDelayed(
-                                new Runnable() {
-                                    public void run() {
-                                        dialog.dismiss();
-                                        m_conversationMessage.remove(m_conversationMessage.size() - 1);
-                                        notifyDataSetChanged();
-
-                                    }
-                                },
-                                time * 1000);
-                    } catch (Exception e) {
-
-                    }
+                    videoView.start();
+                    Log.e("JPEC", "Mon dieu c'est long putain");
+                    videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mp) {
+                            Log.e("JPEC", "Fini");
+                            m_conversationMessage.remove(m_conversationMessage.size() - 1);
+                            notifyDataSetChanged();
+                        }
+                    });
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Log.e("JPEC", "Failed to load the img");
+                    Log.e("JPEC", "Failed to load the video");
                 }
             });
 
@@ -221,46 +231,19 @@ public class ConversationAdapter extends BaseAdapter {
         dialog.show();
     }
 
-    private void isVideo(View convertView, ConversationActivity.Message message) {
-        Log.e("JPEC", "Début isVideo");
+    private void isVideo(View convertView, final ConversationActivity.Message message) {
+        Log.e("JPEC", "isVideo");
         //Make the video layout visible
         LinearLayout imgContainer = (LinearLayout) convertView.findViewById(R.id.imgContainer);
         imgContainer.setVisibility(View.VISIBLE);
-        convertView.findViewById(R.id.img).setVisibility(View.GONE);
-        final VideoView video = (VideoView) convertView.findViewById(R.id.video);
-        video.setVisibility(View.VISIBLE);
-
-        //Fetch the video data to fill the videoview container
-        File localFile = null;
-        try {
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-            localFile = File.createTempFile("VID_OZME_"+timeStamp, "mp4");
-            //localFile = new File(m_context.getCacheDir(), "OZME_VID_" + timeStamp + ".mp4");
-            storageReference = firebaseStorage.getReferenceFromUrl(message.getData());
-            final File finalLocalFile = localFile;
-            storageReference.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                    Log.e("JPEC", "Success download isVideo");
-                    // Local temp file has been created
-                    video.setVideoPath(finalLocalFile.getPath());
-                    video.start();
-
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    // Handle any errors
-                }
-            });
-        } catch (IOException e) {
-            Log.e("JPEC", e.getMessage());
-        }
-
-
-
-
-
+        ImageView img = (ImageView)convertView.findViewById(R.id.img);
+        img.setImageResource(R.drawable.video_white);
+        img.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDialog(message.getType(), message.getData(), message.getTime());
+            }
+        });
     }
 
     private void isImage(View convertView, final ConversationActivity.Message message, TextView messageText, boolean isStranger) {
@@ -299,7 +282,6 @@ public class ConversationAdapter extends BaseAdapter {
 
             }
         }
-
         messageText.setVisibility(View.GONE);
         imgDesc.setText(message.getText());
     }

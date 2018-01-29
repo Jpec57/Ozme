@@ -251,7 +251,6 @@ public class ChallengeChoiceActivity extends AppCompatActivity {
             startActivity(intent);
         }
     }
-    //TODO posssible error
     private String getProfile_pic(){
         Bundle params = new Bundle();
         params.putString("fields", "id,picture.type(large)");

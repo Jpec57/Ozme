@@ -22,9 +22,11 @@ import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -253,6 +255,7 @@ public class CameraActivity extends AppCompatActivity implements MediaPlayer.OnP
 
 
     View.OnClickListener onClickListener = new View.OnClickListener() {
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         public void onClick(View v) {
             switch (v.getId()) {
@@ -330,6 +333,10 @@ public class CameraActivity extends AppCompatActivity implements MediaPlayer.OnP
                     Intent intent1 = new Intent();
                     intent1.setAction(Intent.ACTION_GET_CONTENT);
                     intent1.addCategory(Intent.CATEGORY_OPENABLE);
+
+                    //String[] mimetypes = {"image/*", "video/*"};
+                    //intent1.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
+
                     intent1.setType("image/*");
                     startActivityForResult(intent1, REQUEST_ID);
                     break;
@@ -895,7 +902,7 @@ public class CameraActivity extends AppCompatActivity implements MediaPlayer.OnP
         final long persoId = Long.parseLong(Profile.getCurrentProfile().getId());
         //We build the message we have to send to the different selected users
         final ConversationActivity.Message message = new ConversationActivity.Message();
-        message.setText("Image/Vidéo");
+        message.setText(type);
         message.setType(type);
         message.setSender(persoId);
         message.setTime(time);

@@ -164,6 +164,7 @@
                     <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="60sp"
+                        android:contentDescription="@string/todo"
                         android:padding="10sp"
                         android:id="@+id/profileIcon"
                         android:src="@drawable/my_profile_icon" />
