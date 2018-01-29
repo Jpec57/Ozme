@@ -423,6 +423,7 @@ public class CameraActivity extends AppCompatActivity implements MediaPlayer.OnP
                                                 @Override
                                                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                                     chosenFriend = finalItems.get(position);
+                                                    friends.setText(listView.getItemAtPosition(position).toString());
                                                     dialog.dismiss();
                                                 }
                                             });

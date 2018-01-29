@@ -153,8 +153,9 @@ public class UsersInfo {
         JSONObject stats;
         String username;
         List<Long> messagers;
+        long lastSeen;
 
-        public Users(String birthday, String challengeTitle, String code, String description, Filter filter, String gender, List<Boolean> hobbies, String ithink, String job, JSONObject location, List<String> photos, int preference1, int preference2, int preference3, JSONObject stats, String username, List<Long> messagers) {
+        public Users(String birthday, String challengeTitle, String code, String description, Filter filter, String gender, List<Boolean> hobbies, String ithink, String job, JSONObject location, List<String> photos, int preference1, int preference2, int preference3, JSONObject stats, String username, List<Long> messagers, long lastSeen) {
             this.birthday = birthday;
             this.challengeTitle = challengeTitle;
             this.code = code;
@@ -172,6 +173,7 @@ public class UsersInfo {
             this.stats = stats;
             this.username = username;
             this.messagers = messagers;
+            this.lastSeen=lastSeen;
         }
 
 
@@ -314,5 +316,14 @@ public class UsersInfo {
         public void setUsername(String username) {
             this.username = username;
         }
+
+        public long getLastSeen() {
+            return lastSeen;
+        }
+
+        public void setLastSeen(long lastSeen) {
+            this.lastSeen = lastSeen;
+        }
     }
+
 }

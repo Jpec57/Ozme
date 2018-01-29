@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -36,6 +37,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -61,6 +63,7 @@ public class ConversationActivity extends AppCompatActivity {
     List<String> photos;
     int photosIndex=0;
     LinearLayout listViewContainer;
+    Handler handler;
 
 
 
@@ -79,6 +82,8 @@ public class ConversationActivity extends AppCompatActivity {
         setFocusFight();
 
         listViewContainer=(LinearLayout)findViewById(R.id.listViewContainer);
+        handler = new Handler();
+        updateData.run();
 
 
         //Detect when EditText is focused to hide the img
@@ -307,6 +312,50 @@ public class ConversationActivity extends AppCompatActivity {
             public void run() {
                 // Select the last row so it will scroll into view...
                 listView.setSelection(conversationAdapter.getCount() - 1);
+            }
+        });
+    }
+    @Override protected void onDestroy() {
+        super.onDestroy();
+        if(!isChangingConfigurations()) {
+            deleteTempFiles(getCacheDir());
+        }
+    }
+
+    private boolean deleteTempFiles(File file) {
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.isDirectory()) {
+                        deleteTempFiles(f);
+                    } else {
+                        f.delete();
+                    }
+                }
+            }
+        }
+        return file.delete();
+    }
+    private Runnable updateData = new Runnable(){
+        public void run(){
+            setActive();
+            handler.postDelayed(updateData,60000);
+        }
+    };
+
+    private void setActive(){
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference ref=  database.getReference("data/users/"+Profile.getCurrentProfile().getId()+"/active");
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                dataSnapshot.getRef().setValue(System.currentTimeMillis());
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
             }
         });
     }

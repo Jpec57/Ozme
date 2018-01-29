@@ -34,7 +34,6 @@ public class ProfilePublic extends AppCompatActivity {
     private SeekBar seekBar2;
     private SeekBar seekBar3;
     private long id;
-    private UsersInfo.Users user;
     private FirebaseDatabase database;
 
     @Override
@@ -48,6 +47,10 @@ public class ProfilePublic extends AppCompatActivity {
 
     private void setProfileInfo(){
         database= FirebaseDatabase.getInstance();
+        final TextView name_age = (TextView)findViewById(R.id.name_age);
+        final TextView work= (TextView)findViewById(R.id.work);
+        final TextView active = (TextView) findViewById(R.id.active);
+
 
         Button ozme = (Button)findViewById(R.id.ozme);
         ozme.setOnClickListener(new View.OnClickListener() {
@@ -62,7 +65,23 @@ public class ProfilePublic extends AppCompatActivity {
         userReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                user=dataSnapshot.getValue(UsersInfo.Users.class);
+                //Place them into their corresponding places
+                String nameAndAge= dataSnapshot.child("username").getValue(String.class)+", "+dataSnapshot.child("filter").child("age").getValue(Integer.class);
+                name_age.setText(nameAndAge);
+                work.setText(dataSnapshot.child("job").getValue(String.class));
+
+                try {
+                    String availability = "";
+                    if (dataSnapshot.child("gender").getValue(String.class).equals("male")) {
+                        availability = "Actif il y a ";
+                    } else {
+                        availability = "Active il y a ";
+                    }
+                    availability += "30 minutes";
+                    active.setText(availability);
+                }catch (Exception e){
+
+                }
             }
 
             @Override
@@ -70,27 +89,7 @@ public class ProfilePublic extends AppCompatActivity {
 
             }
         });
-        //Place them into their corresponding places
-        TextView name_age = (TextView)findViewById(R.id.name_age);
-        String nameAndAge= user.getUsername()+", "+user.getFilter().getAge();
-        name_age.setText(nameAndAge);
 
-        TextView work= (TextView)findViewById(R.id.work);
-        work.setText(user.getJob());
-
-        try {
-            TextView active = (TextView) findViewById(R.id.active);
-            String availability = "";
-            if (user.getGender().equals("")) {
-                availability = "Actif il y a ";
-            } else {
-                availability = "Active il y a ";
-            }
-            availability += "30 minutes";
-            active.setText(availability);
-        }catch (Exception e){
-
-        }
         setHobbies();
 
 

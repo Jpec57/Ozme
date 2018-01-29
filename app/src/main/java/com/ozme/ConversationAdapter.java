@@ -9,6 +9,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Base64;
 import android.util.Log;
@@ -18,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.VideoView;
 
@@ -44,6 +46,7 @@ import com.volokh.danylo.video_player_manager.ui.VideoPlayerView;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -104,14 +107,14 @@ public class ConversationAdapter extends BaseAdapter {
             String type = message.getType();
             if (type != null && !type.equals("") && !type.equals("text")) {
                 if (type.equals("image")) {
-                    isImage(convertView, message, messageText, false);
+                    isImage(convertView, message, messageText, false, position);
                 } else {
                     //Last one immediatly shown
                     if (position == m_conversationMessage.size()-1){
-                        showDialog(message.getType(), message.getData(), message.getTime());
+                        showDialog(message.getType(), message.getData(), message.getTime(), position);
                     }else{
                         //Have to click on the picture first
-                        isVideo(convertView, message);
+                        isVideo(convertView, message, position);
                     }
                 }
 
@@ -145,7 +148,7 @@ public class ConversationAdapter extends BaseAdapter {
             String type = message.getType();
             if (type != null && !type.equals("") && !type.equals("text")) {
                 if (type.equals("image")) {
-                    isImage(convertView, message, messageText, true);
+                    isImage(convertView, message, messageText, true, position);
                 } else {
                     //if (m_conversationMessage.size()-1 == position)
                     //isVideo(convertView, message);
@@ -163,7 +166,7 @@ public class ConversationAdapter extends BaseAdapter {
         return new BitmapDrawable(m_context.getResources(), BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
     }
 
-    private void showDialog(String type, final String data, final int time) {
+    private void showDialog(String type, final String data, final int time, final int pos) {
         final Dialog dialog = new Dialog(m_context);
         dialog.setContentView(R.layout.dialog_show_oz);
         dialog.setTitle("Oz - Réponse au défi");
@@ -171,19 +174,59 @@ public class ConversationAdapter extends BaseAdapter {
         final ImageView imageView = (ImageView) dialog.findViewById(R.id.img);
         if (type.equals("video")) {
             final VideoView videoView = (VideoView) dialog.findViewById(R.id.video);
+            final ProgressBar progressBar=(ProgressBar)dialog.findViewById(R.id.progress_bar);
             imageView.setVisibility(View.GONE);
+
+            storageReference = firebaseStorage.getReferenceFromUrl(data);
+            try {
+                final File localFile=File.createTempFile("OZME_TEMP", "mp4");
+                storageReference.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>(){
+                    @Override
+                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                        Log.e("JPEC", "file has been downloaded");
+                        videoView.setVisibility(View.VISIBLE);
+                        progressBar.setVisibility(View.GONE);
+
+                        videoView.setVideoPath(localFile.getPath());
+                        videoView.start();
+                        videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mp) {
+                                dialog.dismiss();
+                                //m_conversationMessage.remove(mes);
+                                notifyDataSetChanged();
+                            }
+                        });
+                    }
+                });
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            /*
+                        videoView.setVideoPath(mOutputFile.getPath());
+            videoView.start();
+            videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    videoView.start();
+                }
+            });
+             */
+
+            /*
             storageReference = firebaseStorage.getReferenceFromUrl(data);
             storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
                 public void onSuccess(final Uri uri) {
+
                     videoView.setVisibility(View.VISIBLE);
                     videoView.setVideoURI(uri);
                     videoView.start();
-                    Log.e("JPEC", "Mon dieu c'est long putain");
                     videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                         @Override
                         public void onCompletion(MediaPlayer mp) {
-                            Log.e("JPEC", "Fini");
+                            dialog.dismiss();
                             m_conversationMessage.remove(m_conversationMessage.size() - 1);
                             notifyDataSetChanged();
                         }
@@ -194,7 +237,7 @@ public class ConversationAdapter extends BaseAdapter {
                 public void onFailure(@NonNull Exception e) {
                     Log.e("JPEC", "Failed to load the video");
                 }
-            });
+            });*/
 
         } else {
             storageReference = firebaseStorage.getReferenceFromUrl(data);
@@ -231,7 +274,7 @@ public class ConversationAdapter extends BaseAdapter {
         dialog.show();
     }
 
-    private void isVideo(View convertView, final ConversationActivity.Message message) {
+    private void isVideo(View convertView, final ConversationActivity.Message message, final int pos) {
         Log.e("JPEC", "isVideo");
         //Make the video layout visible
         LinearLayout imgContainer = (LinearLayout) convertView.findViewById(R.id.imgContainer);
@@ -241,12 +284,12 @@ public class ConversationAdapter extends BaseAdapter {
         img.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showDialog(message.getType(), message.getData(), message.getTime());
+                showDialog(message.getType(), message.getData(), message.getTime(), pos);
             }
         });
     }
 
-    private void isImage(View convertView, final ConversationActivity.Message message, TextView messageText, boolean isStranger) {
+    private void isImage(View convertView, final ConversationActivity.Message message, TextView messageText, boolean isStranger, final int pos) {
         LinearLayout imgContainer = (LinearLayout) convertView.findViewById(R.id.imgContainer);
         imgContainer.setVisibility(View.VISIBLE);
         final ImageView img = (ImageView) convertView.findViewById(R.id.img);
@@ -269,7 +312,7 @@ public class ConversationAdapter extends BaseAdapter {
         img.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showDialog(message.getType(), message.getData(), message.getTime());
+                showDialog(message.getType(), message.getData(), message.getTime(), pos);
             }
         });
         if (isStranger) {
@@ -284,6 +327,18 @@ public class ConversationAdapter extends BaseAdapter {
         }
         messageText.setVisibility(View.GONE);
         imgDesc.setText(message.getText());
+    }
+
+    private class loadVideo extends AsyncTask<String, Void, String>{
+
+        @Override
+        protected String doInBackground(String... strings) {
+            return null;
+        }
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+        }
     }
 
 }
