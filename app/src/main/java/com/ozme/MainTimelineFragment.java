@@ -11,6 +11,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Handler;
@@ -34,6 +36,10 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.facebook.Profile;
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
+import com.firebase.geofire.GeoQuery;
+import com.firebase.geofire.GeoQueryEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -41,10 +47,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 
@@ -60,8 +68,9 @@ public class MainTimelineFragment extends FragmentActivity {
     ViewPager viewPager;
     TimelinePagerAdapter timelineSwiperAdapter;
     Handler handler;
-    Location loc;
     FirebaseDatabase database;
+    LocationManager mLocationManager;
+    Location myLocation;
 
 
     @Override
@@ -115,31 +124,65 @@ public class MainTimelineFragment extends FragmentActivity {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
             return;
         }
+        myLocation=getLastKnownLocation();
+
         updateData.run();
 
     }
 
-    @SuppressLint("MissingPermission")
+    private Location getLastKnownLocation() {
+        mLocationManager = (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
+        List<String> providers = mLocationManager.getProviders(true);
+        Location bestLocation = null;
+        for (String provider : providers) {
+            @SuppressLint("MissingPermission") Location l = mLocationManager.getLastKnownLocation(provider);
+            if (l == null) {
+                continue;
+            }
+            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                // Found best last known location: %s", l);
+                bestLocation = l;
+            }
+        }
+        return bestLocation;
+    }
+
     private void setActive() {
         try {
-            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            database.getReference("data/users/" + Profile.getCurrentProfile().getId() + "/location").addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    dataSnapshot.child("lat").getRef().setValue(loc.getLatitude());
-                    dataSnapshot.child("long").getRef().setValue(loc.getLongitude());
+            if (myLocation != null){
+                Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                List<Address> addresses = null;
+                try {
+                    addresses = geocoder.getFromLocation(myLocation.getLatitude(), myLocation.getLongitude(), 1);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+                String cityName = addresses.get(0).getAddressLine(0);
+                //String stateName = addresses.get(0).getAddressLine(1);
+                //String countryName = addresses.get(0).getAddressLine(2);
+                //Log.e("JPEC", cityName);
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
+                database.getReference("data/users/" + Profile.getCurrentProfile().getId() + "/location").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        dataSnapshot.child("lat").getRef().setValue(myLocation.getLatitude());
+                        dataSnapshot.child("long").getRef().setValue(myLocation.getLongitude());
 
-                }
-            });
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+            }
+
         }catch (Exception e){
-
+            Log.e("JPEC", e.getLocalizedMessage());
         }
+
         DatabaseReference ref = database.getReference("data/users/" + Profile.getCurrentProfile().getId() + "/active");
+
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -324,12 +367,12 @@ public class MainTimelineFragment extends FragmentActivity {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         return;
                     }
-                    loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    myLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                     database.getReference("data/users/"+Profile.getCurrentProfile().getId()+"/location").addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            dataSnapshot.child("lat").getRef().setValue(loc.getLatitude());
-                            dataSnapshot.child("long").getRef().setValue(loc.getLongitude());
+                            dataSnapshot.child("lat").getRef().setValue(myLocation.getLatitude());
+                            dataSnapshot.child("long").getRef().setValue(myLocation.getLongitude());
                         }
 
                         @Override

@@ -2,6 +2,8 @@ package com.ozme;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -25,7 +27,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class ProfilePublic extends AppCompatActivity {
 
@@ -68,7 +73,20 @@ public class ProfilePublic extends AppCompatActivity {
                 //Place them into their corresponding places
                 String nameAndAge= dataSnapshot.child("username").getValue(String.class)+", "+dataSnapshot.child("filter").child("age").getValue(Integer.class);
                 name_age.setText(nameAndAge);
-                work.setText(dataSnapshot.child("job").getValue(String.class));
+                //TODO Location
+                Geocoder geocoder = new Geocoder(ProfilePublic.this, Locale.getDefault());
+                List<Address> addresses = null;
+                String cityName="Non renseignée";
+                if (dataSnapshot.child("location").exists()){
+                    try {
+                        addresses = geocoder.getFromLocation(dataSnapshot.child("location").child("lat").getValue(Double.class), dataSnapshot.child("location").child("long").getValue(Double.class), 1);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    cityName = addresses.get(0).getLocality();
+                    //cityName = addresses.get(0).getAddressLine(0);
+                }
+                work.setText(dataSnapshot.child("job").getValue(String.class)+" - "+cityName);
 
                 try {
                     String availability = "";

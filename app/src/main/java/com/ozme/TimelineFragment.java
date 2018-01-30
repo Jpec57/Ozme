@@ -17,6 +17,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.facebook.Profile;
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
+import com.firebase.geofire.GeoQuery;
+import com.firebase.geofire.GeoQueryEventListener;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -138,6 +142,55 @@ public class TimelineFragment extends Fragment {
         //AFTER
 
         database = FirebaseDatabase.getInstance();
+        DatabaseReference ref = database.getReference("/data/users/");
+        //ADDED
+        GeoFire geoFire = new GeoFire(ref);
+        geoFire.setLocation(Profile.getCurrentProfile().getId(), new GeoLocation(37.7853889, -122.4056973), new GeoFire.CompletionListener() {
+            @Override
+            public void onComplete(String key, DatabaseError error) {
+
+            }
+        });
+        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(37.7853889, -122.4056973), 10);
+        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+            @Override
+            public void onKeyEntered(String key, GeoLocation location) {
+                DatabaseReference sortedProfile = database.getReference("data/users/"+key);
+                sortedProfile.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+            }
+
+            @Override
+            public void onKeyExited(String key) {
+
+            }
+
+            @Override
+            public void onKeyMoved(String key, GeoLocation location) {
+
+            }
+
+            @Override
+            public void onGeoQueryReady() {
+
+            }
+
+            @Override
+            public void onGeoQueryError(DatabaseError error) {
+
+            }
+        });
+        //END
+        /*
         database.getReference("/data/users/"+Profile.getCurrentProfile().getId()+"/filter").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -162,6 +215,7 @@ public class TimelineFragment extends Fragment {
 
             }
         });
+        */
     }
 
     private void timelineFilter(final boolean homme, final boolean femme, final int ageMin, final int ageMax){

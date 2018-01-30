@@ -44,7 +44,7 @@ dependencies {
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.github.danylovolokh:video-player-manager:0.2.0'
     compile 'com.github.danylovolokh:list-visibility-utils:0.2.0'
-    //For number picker
+    compile 'com.firebase:geofire-android:2.2.0'
     compile 'com.wefika:horizontal-picker:1.1.1'
 
 

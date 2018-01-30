@@ -64,20 +64,20 @@ public class LoginActivity extends AppCompatActivity {
                 // Set the access token using
                 // currentAccessToken when it's loaded or set.
                 if (currentAccessToken != null){
-                    /*
+
                     Intent intent = new Intent(getApplicationContext(), MainTimelineFragment.class);
-                    startActivity(intent);*/
+                    startActivity(intent);
                 }
             }
         };
         // If the access token is available already assign it.
         accessToken = AccessToken.getCurrentAccessToken();
         boolean loggedIn = AccessToken.getCurrentAccessToken() == null;
-/*
+
         if (!loggedIn){
             Intent intent = new Intent(getApplicationContext(), MainTimelineFragment.class);
             startActivity(intent);
-        }*/
+        }
 
         //END
 

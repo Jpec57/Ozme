@@ -97,15 +97,12 @@ public class MessageViewAdapter extends BaseAdapter {
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                UsersInfo.Users users = dataSnapshot.getValue(UsersInfo.Users.class);
-                List<String> photos = null;
-                if (users != null) {
-                    photos = users.getPhotos();
+                GenericTypeIndicator<List<String>> genericTypeIndicator = new GenericTypeIndicator<List<String>>(){};
+                List<String> photos = dataSnapshot.child("photos").getValue(genericTypeIndicator);
                     photo[0] =photos.get(0);
-                    holder.name_age.setText(users.getUsername());
+                    holder.name_age.setText(dataSnapshot.child("username").getValue(String.class));
                     holder.profile.setImageDrawable(decodeFromBase64ToDrawable(photos.get(0), finalConvertView.getContext()));
 
-                }
             }
 
             @Override
