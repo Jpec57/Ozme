@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +22,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.login.widget.ProfilePictureView;
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
+import com.firebase.geofire.LocationCallback;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -69,37 +73,54 @@ public class ProfilePublic extends AppCompatActivity {
         DatabaseReference userReference=database.getReference("data/users/"+id);
         userReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(final DataSnapshot dataSnapshot) {
                 //Place them into their corresponding places
                 String nameAndAge= dataSnapshot.child("username").getValue(String.class)+", "+dataSnapshot.child("filter").child("age").getValue(Integer.class);
                 name_age.setText(nameAndAge);
                 //TODO Location
-                Geocoder geocoder = new Geocoder(ProfilePublic.this, Locale.getDefault());
+                final Geocoder geocoder = new Geocoder(ProfilePublic.this);
                 List<Address> addresses = null;
-                String cityName="Non renseignée";
-                if (dataSnapshot.child("location").exists()){
-                    try {
-                        addresses = geocoder.getFromLocation(dataSnapshot.child("location").child("lat").getValue(Double.class), dataSnapshot.child("location").child("long").getValue(Double.class), 1);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    cityName = addresses.get(0).getLocality();
-                    //cityName = addresses.get(0).getAddressLine(0);
-                }
-                work.setText(dataSnapshot.child("job").getValue(String.class)+" - "+cityName);
 
-                try {
-                    String availability = "";
-                    if (dataSnapshot.child("gender").getValue(String.class).equals("male")) {
-                        availability = "Actif il y a ";
-                    } else {
-                        availability = "Active il y a ";
-                    }
-                    availability += "30 minutes";
-                    active.setText(availability);
-                }catch (Exception e){
+                DatabaseReference geoRef = database.getReference("geodata");
+                GeoFire geoFire = new GeoFire(geoRef);
+                geoFire.getLocation(id+"", new LocationCallback() {
+                    @Override
+                    public void onLocationResult(String key, GeoLocation location) {
+                        String cityName="Non renseignée";
+                        if (location != null){
+                            List<Address> addresses = null;
+                            try {
+                                Log.e("JPEC", location.latitude+" LAT\n"+location.longitude);
+                                addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            if (addresses.size() > 0) {
+                                cityName=addresses.get(0).getLocality();
+                            }
+                        }
+                        work.setText(dataSnapshot.child("job").getValue(String.class)+" - "+cityName);
 
-                }
+                        try {
+                            String availability = "";
+                            if (dataSnapshot.child("gender").getValue(String.class).equals("male")) {
+                                availability = "Actif il y a ";
+                            } else {
+                                availability = "Active il y a ";
+                            }
+                            availability += "30 minutes";
+                            active.setText(availability);
+                        }catch (Exception e){
+
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
             }
 
             @Override

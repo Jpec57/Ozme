@@ -7,6 +7,7 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +21,9 @@ import com.facebook.Profile;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
+import com.firebase.geofire.GeoQueryDataEventListener;
 import com.firebase.geofire.GeoQueryEventListener;
+import com.firebase.geofire.LocationCallback;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -139,26 +142,110 @@ public class TimelineFragment extends Fragment {
 
 
     private void TimelineFiller(){
-        //AFTER
-
         database = FirebaseDatabase.getInstance();
-        DatabaseReference ref = database.getReference("/data/users/");
-        //ADDED
-        GeoFire geoFire = new GeoFire(ref);
-        geoFire.setLocation(Profile.getCurrentProfile().getId(), new GeoLocation(37.7853889, -122.4056973), new GeoFire.CompletionListener() {
+        final DatabaseReference ref = database.getReference("/geodata");
+        final GeoFire geoFire = new GeoFire(ref);
+
+        //TODO regarder ici
+        geoFire.setLocation(11111111L+"", new GeoLocation(38, -122.4056973), new GeoFire.CompletionListener() {
             @Override
             public void onComplete(String key, DatabaseError error) {
 
             }
         });
-        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(37.7853889, -122.4056973), 10);
-        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+        geoFire.setLocation(1155490200L+"", new GeoLocation(49.0482965, 6.89372949), new GeoFire.CompletionListener() {
             @Override
-            public void onKeyEntered(String key, GeoLocation location) {
-                DatabaseReference sortedProfile = database.getReference("data/users/"+key);
-                sortedProfile.addListenerForSingleValueEvent(new ValueEventListener() {
+            public void onComplete(String key, DatabaseError error) {
+
+            }
+        });
+        geoFire.setLocation(213996785709121L+"", new GeoLocation(60.7853890, -122.4056973), new GeoFire.CompletionListener() {
+            @Override
+            public void onComplete(String key, DatabaseError error) {
+
+            }
+        });
+
+
+
+
+
+        database.getReference("/data/users/"+Profile.getCurrentProfile().getId()+"/filter").addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.e("JPEC", "Personal data");
+                final int ageMin=dataSnapshot.child("ageMin").getValue(Integer.class);
+                final int ageMax=dataSnapshot.child("ageMax").getValue(Integer.class);
+                final boolean homme = dataSnapshot.child("homme").getValue(Boolean.class);
+                final boolean femme= dataSnapshot.child("femme").getValue(Boolean.class);
+                geoFire.getLocation(Profile.getCurrentProfile().getId(), new LocationCallback() {
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
+                    public void onLocationResult(String key, GeoLocation location) {
+                        GeoQuery geoQuery;
+                        if (location != null){
+                            geoQuery = geoFire.queryAtLocation(location, 10);
+                        }else{
+                            geoQuery = geoFire.queryAtLocation(new GeoLocation(37.7853889, -122.4056973), 10);
+                        }
+
+                        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+                            @Override
+                            public void onKeyEntered(String key, GeoLocation location) {
+                                Log.e("JPEC", "geo");
+                                DatabaseReference sortedProfile = database.getReference("data/users/"+key);
+                                sortedProfile.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        Log.e("JPEC", dataSnapshot.child("username").getValue(String.class));
+                                        DataSnapshot filter = dataSnapshot.child("filter");
+                                        if (homme && femme){
+                                            Log.e("JPEC", "sexe ok");
+                                            try{
+                                            if (ageMin <= filter.child("age").getValue(Integer.class) && ageMax >= filter.child("age").getValue(Integer.class)){
+                                                Log.e("JPEC", "age ok");
+                                                filler(dataSnapshot);
+                                            }}catch (Exception e){
+                                                Log.e("JPEC", "age not specified");
+                                                filler(dataSnapshot);
+                                            }
+                                        }else if (homme && filter.child("gender").equals("male")){
+                                            filler(dataSnapshot);
+                                        }else{
+                                            filler(dataSnapshot);
+                                        }
+
+
+
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onKeyExited(String key) {
+
+                            }
+
+                            @Override
+                            public void onKeyMoved(String key, GeoLocation location) {
+
+                            }
+
+                            @Override
+                            public void onGeoQueryReady() {
+
+                            }
+
+                            @Override
+                            public void onGeoQueryError(DatabaseError error) {
+
+                            }
+                        });
 
                     }
 
@@ -167,47 +254,8 @@ public class TimelineFragment extends Fragment {
 
                     }
                 });
-            }
 
-            @Override
-            public void onKeyExited(String key) {
 
-            }
-
-            @Override
-            public void onKeyMoved(String key, GeoLocation location) {
-
-            }
-
-            @Override
-            public void onGeoQueryReady() {
-
-            }
-
-            @Override
-            public void onGeoQueryError(DatabaseError error) {
-
-            }
-        });
-        //END
-        /*
-        database.getReference("/data/users/"+Profile.getCurrentProfile().getId()+"/filter").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                int ageMin=dataSnapshot.child("ageMin").getValue(Integer.class);
-                int ageMax=dataSnapshot.child("ageMax").getValue(Integer.class);
-
-                //Want to find a male or a female
-                if (dataSnapshot.child("homme").getValue(Boolean.class)&&dataSnapshot.child("femme").getValue(Boolean.class)){
-                    timelineFilter(true, true, ageMin, ageMax);
-                }else {
-                    //Want to find a male
-                    if (dataSnapshot.child("homme").getValue(Boolean.class)){
-                        timelineFilter(true, false, ageMin, ageMax);
-                    }else{
-                        timelineFilter(false, true, ageMin, ageMax);
-                    }
-                }
             }
 
             @Override
@@ -215,7 +263,7 @@ public class TimelineFragment extends Fragment {
 
             }
         });
-        */
+
     }
 
     private void timelineFilter(final boolean homme, final boolean femme, final int ageMin, final int ageMax){

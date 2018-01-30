@@ -125,6 +125,15 @@ public class MainTimelineFragment extends FragmentActivity {
             return;
         }
         myLocation=getLastKnownLocation();
+        final DatabaseReference ref = database.getReference("/geodata");
+        final GeoFire geoFire = new GeoFire(ref);
+
+        geoFire.setLocation(Profile.getCurrentProfile().getId(), new GeoLocation(myLocation.getLatitude(), myLocation.getLongitude()), new GeoFire.CompletionListener() {
+            @Override
+            public void onComplete(String key, DatabaseError error) {
+
+            }
+        });
 
         updateData.run();
 
@@ -157,10 +166,7 @@ public class MainTimelineFragment extends FragmentActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                String cityName = addresses.get(0).getAddressLine(0);
-                //String stateName = addresses.get(0).getAddressLine(1);
-                //String countryName = addresses.get(0).getAddressLine(2);
-                //Log.e("JPEC", cityName);
+                //String cityName = addresses.get(0).getAddressLine(0);
 
                 database.getReference("data/users/" + Profile.getCurrentProfile().getId() + "/location").addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -368,15 +374,12 @@ public class MainTimelineFragment extends FragmentActivity {
                         return;
                     }
                     myLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    database.getReference("data/users/"+Profile.getCurrentProfile().getId()+"/location").addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            dataSnapshot.child("lat").getRef().setValue(myLocation.getLatitude());
-                            dataSnapshot.child("long").getRef().setValue(myLocation.getLongitude());
-                        }
+                    final DatabaseReference ref = database.getReference("/geodata");
+                    final GeoFire geoFire = new GeoFire(ref);
 
+                    geoFire.setLocation(Profile.getCurrentProfile().getId(), new GeoLocation(myLocation.getLatitude(), myLocation.getLongitude()), new GeoFire.CompletionListener() {
                         @Override
-                        public void onCancelled(DatabaseError databaseError) {
+                        public void onComplete(String key, DatabaseError error) {
 
                         }
                     });
